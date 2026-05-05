@@ -24,13 +24,6 @@ async function resetHue() {
 	rangeEl?.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-function applyToCurrentSession() {
-	if (typeof localStorage !== "undefined") {
-		localStorage.setItem("hue", String(hue));
-		window.showAdminToast?.("主题色已应用至当前浏览器会话。");
-	}
-}
-
 $: if (hue || hue === 0) {
 	applyHue();
 }
@@ -56,16 +49,6 @@ $: if (hue || hue === 0) {
 				>
 					<div class="text-[var(--btn-content)]">
 						<Icon icon="fa6-solid:arrow-rotate-left" class="text-[0.875rem]"></Icon>
-					</div>
-				</button>
-				<button
-					type="button"
-					class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
-					on:click={applyToCurrentSession}
-					title="同步至当前会话"
-				>
-					<div class="text-[var(--btn-content)]">
-						<Icon icon="fa6-solid:check" class="text-[0.875rem]"></Icon>
 					</div>
 				</button>
 			</div>
