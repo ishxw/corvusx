@@ -19,7 +19,7 @@ export function siteSettingsToRuntimeConfig(settings: AdminSiteSettings): {
 			banner: {
 				enable: settings.bannerEnabled,
 				src: settings.bannerSrc,
-				position: settings.bannerPosition === "full" ? "center" : settings.bannerPosition,
+				position: settings.bannerPosition,
 				credit: {
 					enable: false,
 					text: "",

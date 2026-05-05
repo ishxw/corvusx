@@ -38,12 +38,8 @@ const activeSiteConfig = runtimeSiteConfig || siteConfig;
 const hasBannerCredit =
 	activeSiteConfig.banner.enable && activeSiteConfig.banner.credit.enable;
 const hasBannerLink = !!activeSiteConfig.banner.credit.url;
-const fullPageBanner = activeSiteConfig.banner.enable && activeSiteConfig.banner.position === "center";
-
 const mainPanelTop = activeSiteConfig.banner.enable
-	? fullPageBanner
-		? "5.5rem"
-		: `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
+	? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
 	: "5.5rem";
 ---
 
@@ -52,9 +48,9 @@ const mainPanelTop = activeSiteConfig.banner.enable
 <!-- Navbar -->
 <slot slot="head" name="head"></slot>
 <div id="top-row" class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto" class:list={[""]}>
-    <div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
-        <Navbar></Navbar>
-    </div>
+	<div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
+		<Navbar></Navbar>
+	</div>
 </div>
 
 <!-- Banner -->

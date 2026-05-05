@@ -29,9 +29,18 @@ const isPublic = src.startsWith("/");
 // biome-ignore lint/suspicious/noImplicitAnyLet: <check later>
 let img;
 if (isLocal) {
-	const files = import.meta.glob<ImageMetadata>("../../**", {
-		import: "default",
-	});
+	// Restrict the glob to image assets only.
+	// A broad "../../**" glob also pulls admin pages into the client build graph,
+	// which leaks admin-only CSS into the public frontend.
+	const files = import.meta.glob<ImageMetadata>(
+		[
+			"../../assets/**/*.{png,jpg,jpeg,gif,webp,avif,svg}",
+			"../../content/**/*.{png,jpg,jpeg,gif,webp,avif,svg}",
+		],
+		{
+			import: "default",
+		},
+	);
 	let normalizedPath = path
 		.normalize(path.join("../../", basePath, src))
 		.replace(/\\/g, "/");

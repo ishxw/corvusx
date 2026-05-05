@@ -3,6 +3,9 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "@fontsource-variable/jetbrains-mono";
+import "@/styles/main.css";
+import "@/styles/markdown.css";
+import "@/styles/markdown-extend.styl";
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
 import { getRuntimeState } from "@/server/runtime-state";
@@ -46,9 +49,26 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 		<meta name="author" content={activeProfileConfig.name} />
 		<title>{pageTitle}</title>
 		<style define:vars={{ adminHue: String(configHue) }}></style>
+		<script is:inline define:vars={{ configHue }}>
+			// Load the theme from local storage
+			const theme = localStorage.getItem('theme') || 'auto';
+			if (theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+				document.documentElement.classList.add('dark');
+			} else {
+				document.documentElement.classList.remove('dark');
+			}
+
+			// Set the theme for Expressive Code
+			document.documentElement.setAttribute('data-theme', 'github-dark');
+
+			// Load the hue from local storage
+			const hue = localStorage.getItem('hue') || configHue;
+			document.documentElement.style.setProperty('--hue', hue);
+		</script>
 	</head>
 	<body
 		data-admin
+		data-no-swup
 		class="min-h-screen bg-[var(--page-bg)] text-black/90 selection:bg-[var(--selection-bg)] dark:text-white/90"
 	>
 		<ConfigCarrier />
@@ -72,7 +92,7 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 		</script>
 
 		<!-- Subtle Background blobs -->
-		<div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden opacity-50 transition-opacity duration-500">
+		<div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden opacity-40 transition-opacity duration-500">
 			<div class="absolute -left-24 -top-24 h-[32rem] w-[32rem] rounded-full bg-[oklch(0.85_0.12_var(--hue))] blur-[100px] dark:bg-[oklch(0.3_0.08_var(--hue))]"></div>
 			<div class="absolute -right-12 top-[15vh] h-[28rem] w-[28rem] rounded-full bg-[oklch(0.9_0.08_var(--hue))] blur-[100px] dark:bg-[oklch(0.25_0.06_var(--hue))]"></div>
 			<div class="absolute bottom-[-10rem] left-[20vw] h-[24rem] w-[24rem] rounded-full bg-[oklch(0.92_0.04_var(--hue))] blur-[100px] dark:bg-[oklch(0.22_0.04_var(--hue))]"></div>
@@ -140,6 +160,129 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 				}, 4000);
 			};
 
+			// Global Custom Dialog Logic
+			window.showAdminConfirm = (message) => {
+				return new Promise((resolve) => {
+					const overlay = document.createElement('div');
+					overlay.className = 'fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-6 backdrop-blur-sm transition-opacity duration-300 opacity-0';
+					overlay.innerHTML = `
+						<div class="w-full max-w-sm scale-95 rounded-[2.5rem] border border-black/5 bg-white p-8 shadow-2xl transition-transform duration-300 dark:border-white/5 dark:bg-[var(--card-bg)]">
+							<div class="mb-6 text-center text-lg font-bold text-black/90 dark:text-white/95">${message}</div>
+							<div class="flex gap-4">
+								<button id="confirm-cancel" class="flex-1 rounded-2xl bg-black/5 py-4 text-sm font-bold text-black/40 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white/40 dark:hover:bg-white/10">取消</button>
+								<button id="confirm-ok" class="flex-1 rounded-2xl bg-[var(--primary)] py-4 text-sm font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition-transform active:scale-95">确认</button>
+							</div>
+						</div>
+					`;
+					document.body.appendChild(overlay);
+					requestAnimationFrame(() => {
+						overlay.classList.remove('opacity-0');
+						overlay.firstElementChild.classList.remove('scale-95');
+					});
+
+					const cleanup = (value) => {
+						overlay.classList.add('opacity-0');
+						overlay.firstElementChild.classList.add('scale-95');
+						setTimeout(() => {
+							overlay.remove();
+							resolve(value);
+						}, 300);
+					};
+
+					overlay.querySelector('#confirm-ok').onclick = () => cleanup(true);
+					overlay.querySelector('#confirm-cancel').onclick = () => cleanup(false);
+				});
+			};
+
+			window.showAdminAlert = (message, title = '提醒') => {
+				return new Promise((resolve) => {
+					const overlay = document.createElement('div');
+					overlay.className = 'fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-6 backdrop-blur-sm transition-opacity duration-300 opacity-0';
+					overlay.innerHTML = `
+						<div class="w-full max-w-sm scale-95 rounded-[2.5rem] border border-black/5 bg-white p-8 shadow-2xl transition-transform duration-300 dark:border-white/5 dark:bg-[var(--card-bg)]">
+							<div class="mb-2 text-center text-xs font-black uppercase tracking-widest text-black/30 dark:text-white/30">${title}</div>
+							<div class="mb-8 text-center text-lg font-bold text-black/90 dark:text-white/95">${message}</div>
+							<button id="alert-ok" class="w-full rounded-2xl bg-[var(--primary)] py-4 text-sm font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition-transform active:scale-95">知道了</button>
+						</div>
+					`;
+					document.body.appendChild(overlay);
+					requestAnimationFrame(() => {
+						overlay.classList.remove('opacity-0');
+						overlay.firstElementChild.classList.remove('scale-95');
+					});
+
+					const cleanup = () => {
+						overlay.classList.add('opacity-0');
+						overlay.firstElementChild.classList.add('scale-95');
+						setTimeout(() => {
+							overlay.remove();
+							resolve();
+						}, 300);
+					};
+
+					overlay.querySelector('#alert-ok').onclick = cleanup;
+				});
+			};
+
+			window.showAdminPrompt = (message, defaultValue = '', title = '输入') => {
+				return new Promise((resolve) => {
+					const overlay = document.createElement('div');
+					overlay.className = 'fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-6 backdrop-blur-sm transition-opacity duration-300 opacity-0';
+					overlay.innerHTML = `
+						<div class="w-full max-w-sm scale-95 rounded-[2.5rem] border border-black/5 bg-white p-8 shadow-2xl transition-transform duration-300 dark:border-white/5 dark:bg-[var(--card-bg)]">
+							<div class="mb-2 text-center text-xs font-black uppercase tracking-widest text-black/30 dark:text-white/30">${title}</div>
+							<div class="mb-6 text-center text-lg font-bold text-black/90 dark:text-white/95">${message}</div>
+							<div class="mb-6">
+								<input type="text" id="prompt-input" value="${defaultValue}" class="w-full rounded-2xl border border-black/5 bg-black/[0.03] px-4 py-3 outline-none focus:border-[var(--primary)] dark:border-white/5 dark:bg-white/5" />
+							</div>
+							<div class="flex gap-4">
+								<button id="prompt-cancel" class="flex-1 rounded-2xl bg-black/5 py-4 text-sm font-bold text-black/40 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-white/40 dark:hover:bg-white/10">取消</button>
+								<button id="prompt-ok" class="flex-1 rounded-2xl bg-[var(--primary)] py-4 text-sm font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition-transform active:scale-95">确定</button>
+							</div>
+						</div>
+					`;
+					document.body.appendChild(overlay);
+					const input = overlay.querySelector('#prompt-input');
+					input.focus();
+					input.select();
+					
+					requestAnimationFrame(() => {
+						overlay.classList.remove('opacity-0');
+						overlay.firstElementChild.classList.remove('scale-95');
+					});
+
+					const cleanup = (value) => {
+						overlay.classList.add('opacity-0');
+						overlay.firstElementChild.classList.add('scale-95');
+						setTimeout(() => {
+							overlay.remove();
+							resolve(value);
+						}, 300);
+					};
+
+					overlay.querySelector('#prompt-ok').onclick = () => cleanup(input.value);
+					overlay.querySelector('#prompt-cancel').onclick = () => cleanup(null);
+					input.onkeydown = (e) => {
+						if (e.key === 'Enter') cleanup(input.value);
+						if (e.key === 'Escape') cleanup(null);
+					};
+				});
+			};
+
+			window.adminIsDirty = false;
+
+			document.addEventListener('click', async (e) => {
+				const a = e.target.closest('a');
+				if (a && window.adminIsDirty && a.hostname === window.location.hostname && !a.hasAttribute('data-no-intercept')) {
+					e.preventDefault();
+					const confirmed = await window.showAdminConfirm('你所做的更改可能未保存，确定要离开吗？');
+					if (confirmed) {
+						window.adminIsDirty = false;
+						window.location.href = a.href;
+					}
+				}
+			}, true);
+
 			// Initial Toasts from Server
 			if (success) window.showAdminToast(success, 'success');
 			if (error) window.showAdminToast(error, 'error');
@@ -151,9 +294,6 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 </html>
 
 <style is:global define:vars={{ adminHue: String(configHue) }}>
-	@import "../styles/main.css";
-	@import "../styles/markdown.css";
-
 	:root {
 		--hue: var(--adminHue);
 		--radius-large: 1.25rem;
@@ -171,6 +311,12 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 		--line-color: rgba(0, 0, 0, 0.08);
 		--selection-bg: oklch(0.92 0.06 var(--hue));
 		--float-panel-bg: white;
+		--license-block-bg: rgba(0, 0, 0, 0.03);
+		--admonitions-color-tip: oklch(0.7 0.14 180);
+		--admonitions-color-note: oklch(0.7 0.14 250);
+		--admonitions-color-important: oklch(0.7 0.14 310);
+		--admonitions-color-warning: oklch(0.7 0.14 60);
+		--admonitions-color-caution: oklch(0.6 0.2 25);
 	}
 
 	:root.dark {
@@ -187,6 +333,12 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 		--line-color: rgba(255, 255, 255, 0.08);
 		--selection-bg: oklch(0.35 0.08 var(--hue));
 		--float-panel-bg: oklch(0.2 0.02 var(--hue));
+		--license-block-bg: oklch(0.17 0.015 var(--hue));
+		--admonitions-color-tip: oklch(0.75 0.14 180);
+		--admonitions-color-note: oklch(0.75 0.14 250);
+		--admonitions-color-important: oklch(0.75 0.14 310);
+		--admonitions-color-warning: oklch(0.75 0.14 60);
+		--admonitions-color-caution: oklch(0.65 0.2 25);
 	}
 
 	body[data-admin] {
@@ -205,8 +357,8 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 		border-radius: var(--radius-large);
 	}
 
-	body[data-admin].dark .card-base,
-	body[data-admin].dark [data-admin-card] {
+	.dark body[data-admin] .card-base,
+	.dark body[data-admin] [data-admin-card] {
 		box-shadow: 0 10px 40px -15px rgba(0, 0, 0, 0.4);
 	}
 
@@ -244,7 +396,7 @@ const pageTitle = `${title} - ${siteTitle} 控制台`;
 		color: rgba(0, 0, 0, 0.6);
 	}
 	
-	body[data-admin].dark .admin-label {
+	.dark body[data-admin] .admin-label {
 		color: rgba(255, 255, 255, 0.6);
 	}
 

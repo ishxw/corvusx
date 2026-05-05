@@ -12,9 +12,12 @@ export async function getSiteSettings(): Promise<AdminSiteSettings> {
 	try {
 		const raw = await fs.readFile(SITE_SETTINGS_PATH, "utf8");
 		const parsed = JSON.parse(raw) as Partial<AdminSiteSettings>;
+		const bannerPosition =
+			parsed.bannerPosition === "center" ? "center" : "top";
 		return {
 			...defaultSiteSettings,
 			...parsed,
+			bannerPosition,
 			profileLinks: parsed.profileLinks ?? defaultSiteSettings.profileLinks,
 			navLinks: parsed.navLinks ?? defaultSiteSettings.navLinks,
 		};

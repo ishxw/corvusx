@@ -2,6 +2,15 @@
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import "@fontsource-variable/jetbrains-mono";
+import "@/styles/variables.styl";
+import "@/styles/main.css";
+import "@/styles/markdown.css";
+import "@/styles/markdown-extend.styl";
+import "@/styles/scrollbar.css";
+import "@/styles/transition.css";
+import "@/styles/photoswipe.css";
+import "@/styles/expressive-code.css";
 
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
@@ -77,10 +86,6 @@ const bannerOffsetByPosition = {
 };
 const bannerOffset =
 	bannerOffsetByPosition[activeSiteConfig.banner.position || "center"];
-const fullPageBanner =
-	activeSiteConfig.banner.enable &&
-	activeSiteConfig.banner.position === "center" &&
-	isHomePage === false;
 ---
 
 <!DOCTYPE html>
@@ -140,7 +145,8 @@ const fullPageBanner =
 			}
 
 			// Load the hue from local storage
-			const hue = localStorage.getItem('hue') || configHue;
+			const storedHue = localStorage.getItem('hue');
+			const hue = storedHue || configHue;
 			document.documentElement.style.setProperty('--hue', hue);
 
 			// calculate the --banner-height-extend, which needs to be a multiple of 4 to avoid blurry text
@@ -159,7 +165,7 @@ const fullPageBanner =
 		<link rel="alternate" type="application/rss+xml" title={activeProfileConfig.name} href={`${Astro.site}rss.xml`}/>
 
 	</head>
-	<body class=" min-h-screen transition " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner, "full-page-banner": fullPageBanner}]}
+	<body class=" min-h-screen transition " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner}]}
 		  data-overlayscrollbars-initialize
 	>
 		<ConfigCarrier></ConfigCarrier>
@@ -188,30 +194,17 @@ import "../components/GitHubCard.client.ts";
 		@apply h-[var(--banner-height-home)]
 	}
 
-	.enable-banner.full-page-banner #banner-wrapper {
-		@apply h-[100vh] translate-y-0
-	}
-
 	.enable-banner.is-home #banner {
 		@apply h-[var(--banner-height-home)] translate-y-0
 	}
 	.enable-banner #banner {
 		@apply h-[var(--banner-height-home)] translate-y-[var(--bannerOffset)]
 	}
-	.enable-banner.full-page-banner #banner {
-		@apply h-[100vh] translate-y-0
-	}
 	.enable-banner.is-home #main-grid {
 		@apply translate-y-[var(--banner-height-extend)];
 	}
-	.enable-banner.full-page-banner #main-grid {
-		@apply translate-y-0;
-	}
 	.enable-banner #top-row {
 		@apply h-[calc(var(--banner-height-home)_-_4.5rem)] transition-all duration-300
-	}
-	.enable-banner.full-page-banner #top-row {
-		@apply h-[4.5rem]
 	}
 	.enable-banner.is-home #sidebar-sticky {
 		@apply top-[calc(1rem_-_var(--banner-height-extend))]
