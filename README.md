@@ -9,7 +9,21 @@ pnpm install
 pnpm dev
 ```
 
+## 发布
+
+```sh
+pnpm build
+pnpm preview
+```
+
+
 默认开发地址是 `http://localhost:4321/`。
+
+```sh
+后台管理面板
+   * 用户名：admin
+   * 默认密码：admin123456
+```
 
 ## 常用命令
 
