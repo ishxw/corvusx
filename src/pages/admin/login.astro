@@ -6,7 +6,10 @@ import {
 	DEFAULT_THEME,
 	LIGHT_MODE,
 } from "@/constants/constants";
+import { defaultFavicons } from "@/constants/icon";
 import { getRuntimeState } from "@/server/runtime-state";
+import type { Favicon } from "@/types/config";
+import { url } from "@/utils/url-utils";
 
 const error = Astro.url.searchParams.get("error");
 const minutes = Astro.url.searchParams.get("minutes");
@@ -19,7 +22,10 @@ if (error === "invalid" || error === "1") {
 }
 
 const { siteConfig: runtimeSiteConfig } = await getRuntimeState();
-const siteTitle = runtimeSiteConfig?.title || siteConfig.title || "Corvusx";
+const activeSiteConfig = runtimeSiteConfig || siteConfig;
+const siteTitle = activeSiteConfig.title || "Corvusx";
+const favicons: Favicon[] =
+	activeSiteConfig.favicon.length > 0 ? activeSiteConfig.favicon : defaultFavicons;
 ---
 
 <!DOCTYPE html>
@@ -31,6 +37,14 @@ const siteTitle = runtimeSiteConfig?.title || siteConfig.title || "Corvusx";
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Hi there! - {siteTitle}</title>
+		{favicons.map((favicon) => (
+			<link
+				rel="icon"
+				href={favicon.src.startsWith("/") ? url(favicon.src) : favicon.src}
+				sizes={favicon.sizes}
+				media={favicon.theme && `(prefers-color-scheme: ${favicon.theme})`}
+			/>
+		))}
 		<style>
 			@import "@fontsource/roboto/400.css";
 			@import "@fontsource/roboto/700.css";

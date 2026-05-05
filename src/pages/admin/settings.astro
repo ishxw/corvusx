@@ -1,8 +1,8 @@
----
-import MediaPickerModal from "@/components/admin/MediaPickerModal.astro";
+﻿---
 import AdminThemeHueControl from "@/components/admin/AdminThemeHueControl.svelte";
-import AdminLayout from "@/layouts/AdminLayout.astro";
+import MediaPickerModal from "@/components/admin/MediaPickerModal.astro";
 import { siteConfig } from "@/config";
+import AdminLayout from "@/layouts/AdminLayout.astro";
 import { resolveAdminPreviewUrl } from "@/server/admin-preview";
 import { getSiteSettings } from "@/server/site-store";
 
@@ -13,7 +13,10 @@ if (!Astro.locals.adminUser) {
 const settings = await getSiteSettings();
 const success = Astro.url.searchParams.get("success");
 const error = Astro.url.searchParams.get("error");
-const profileAvatarPreview = await resolveAdminPreviewUrl(settings.profileAvatar);
+const profileAvatarPreview = await resolveAdminPreviewUrl(
+	settings.profileAvatar,
+);
+const faviconPreview = await resolveAdminPreviewUrl(settings.faviconSrc);
 const bannerPreview = await resolveAdminPreviewUrl(settings.bannerSrc);
 const defaultThemeHue = siteConfig.themeColor.hue;
 ---
@@ -66,42 +69,90 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 
 		<!-- Section: Basics -->
 		<section id="section-basics" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
-			<div class="mb-10">
-				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">基础信息</h2>
-				<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">影响站点的核心身份、语言和整体视觉基调。</p>
-			</div>
-			<div class="grid gap-8 md:grid-cols-2">
-				<div class="space-y-6">
-					<label class="block">
-						<div class="admin-label">站点标题</div>
-						<input name="title" value={settings.title} placeholder="输入博客名称" />
-					</label>
-					<label class="block">
-						<div class="admin-label">副标题</div>
-						<input name="subtitle" value={settings.subtitle} placeholder="一句简单的描述" />
-					</label>
-					<label class="block">
-						<div class="admin-label">站点语言</div>
-						<input name="lang" value={settings.lang} placeholder="zh_CN" />
-					</label>
+			<div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+				<div>
+					<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">基础信息</h2>
+					<p class="mt-2 max-w-2xl text-sm leading-relaxed text-black/50 dark:text-white/50">
+						统一管理站点名称、描述、语言、图标与默认主题色。保存后会同步更新前台站点配置，并将主题色同步到当前浏览器会话。
+					</p>
 				</div>
-				<div class="space-y-6">
-					<div class="block">
+				<div class="grid gap-3 sm:grid-cols-3">
+					<div class="rounded-2xl bg-black/[0.03] px-4 py-3 text-center dark:bg-white/[0.03]">
+						<div class="text-[10px] font-black uppercase tracking-[0.18em] text-black/30 dark:text-white/30">语言</div>
+						<div class="mt-1 text-sm font-bold text-black/75 dark:text-white/75">{settings.lang}</div>
+					</div>
+					<div class="rounded-2xl bg-black/[0.03] px-4 py-3 text-center dark:bg-white/[0.03]">
+						<div class="text-[10px] font-black uppercase tracking-[0.18em] text-black/30 dark:text-white/30">默认色相</div>
+						<div class="mt-1 text-sm font-bold text-black/75 dark:text-white/75">{settings.themeHue}</div>
+					</div>
+					<div class="rounded-2xl bg-black/[0.03] px-4 py-3 text-center dark:bg-white/[0.03]">
+						<div class="text-[10px] font-black uppercase tracking-[0.18em] text-black/30 dark:text-white/30">站点图标</div>
+						<div class="mt-1 text-sm font-bold text-black/75 dark:text-white/75">已配置</div>
+					</div>
+				</div>
+			</div>
+			<div class="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+				<div class="space-y-6 rounded-[2rem] border border-black/5 bg-black/[0.02] p-6 dark:border-white/5 dark:bg-white/[0.02]">
+					<div class="text-[10px] font-black uppercase tracking-[0.25em] text-black/30 dark:text-white/30">站点身份</div>
+					<div class="grid gap-6 md:grid-cols-2">
+						<label class="block md:col-span-2">
+							<div class="admin-label">站点标题</div>
+							<input name="title" value={settings.title} placeholder="输入博客名称" />
+						</label>
+						<label class="block md:col-span-2">
+							<div class="admin-label">副标题</div>
+							<input name="subtitle" value={settings.subtitle} placeholder="一句简单的描述" />
+						</label>
+						<label class="block">
+							<div class="admin-label">站点语言</div>
+							<input name="lang" value={settings.lang} placeholder="zh_CN" />
+						</label>
+						<div class="rounded-2xl border border-dashed border-black/5 bg-white/60 p-4 dark:border-white/5 dark:bg-black/20">
+							<div class="text-[10px] font-black uppercase tracking-widest text-black/30 dark:text-white/30">固定主题色</div>
+							<label class="mt-3 flex cursor-pointer items-start gap-3">
+								<input type="checkbox" name="themeFixed" checked={settings.themeFixed} class="mt-0.5 h-5 w-5 rounded-lg accent-[var(--primary)]" />
+								<div class="space-y-1">
+									<div class="text-sm font-bold text-black/80 dark:text-white/80">锁定前台主题色</div>
+									<div class="text-xs leading-relaxed text-black/40 dark:text-white/40">
+										启用后，访客将无法在前台动态切换主题颜色。保存站点设置时会自动同步到当前浏览器会话。
+									</div>
+								</div>
+							</label>
+						</div>
+					</div>
+				</div>
+				<div class="space-y-6 rounded-[2rem] border border-black/5 bg-black/[0.02] p-6 dark:border-white/5 dark:bg-white/[0.02]">
+					<div class="text-[10px] font-black uppercase tracking-[0.25em] text-black/30 dark:text-white/30">视觉标识</div>
+					<div class="rounded-[2rem] border border-dashed border-black/5 bg-white/70 p-5 dark:border-white/5 dark:bg-black/20">
+						<div class="mb-4 flex items-center gap-4">
+							<img
+								data-media-preview-for="faviconSrc"
+								alt="站点图标预览"
+								class:list={["h-16 w-16 rounded-2xl object-cover shadow-md", !faviconPreview.isResolvable && "hidden"]}
+								src={faviconPreview.isResolvable ? faviconPreview.value : undefined}
+							/>
+							<div data-media-preview-empty="faviconSrc" class:list={["flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5 text-[10px] font-black uppercase tracking-widest text-black/20 dark:bg-white/5 dark:text-white/20", faviconPreview.isResolvable && "hidden"]}>
+								Icon
+							</div>
+							<div>
+								<div class="text-sm font-bold text-black/80 dark:text-white/80">站点图标</div>
+								<div class="mt-1 text-xs leading-relaxed text-black/40 dark:text-white/40">
+									浏览器标签页与书签会使用这张图标。默认值为 <code class="rounded bg-black/5 px-1 font-mono dark:bg-white/5">/favicon/corvusx.svg</code>。
+								</div>
+							</div>
+						</div>
+						<div class="flex gap-3">
+							<input id="faviconSrc" name="faviconSrc" value={settings.faviconSrc} data-media-input class="flex-1" />
+							<button type="button" data-open-media-picker data-target-input="faviconSrc" data-picker-label="选择站点图标" class="btn-plain shrink-0 rounded-2xl px-5 font-bold text-sm">选择</button>
+						</div>
+					</div>
+					<div class="rounded-[2rem] bg-black/[0.03] p-5 dark:bg-white/[0.03]">
 						<AdminThemeHueControl
 							client:load
 							initialHue={settings.themeHue}
 							defaultHue={defaultThemeHue}
 							name="themeHue"
 						/>
-					</div>
-					<div class="rounded-3xl bg-black/[0.03] p-6 dark:bg-white/[0.03]">
-						<label class="flex items-center gap-4 cursor-pointer">
-							<input type="checkbox" name="themeFixed" checked={settings.themeFixed} class="h-5 w-5 rounded-lg accent-[var(--primary)]" />
-							<div class="space-y-1">
-								<div class="text-sm font-bold text-black/80 dark:text-white/80">固定主题色</div>
-								<div class="text-xs text-black/40 dark:text-white/40">启用后，访客将无法在前台动态切换主题颜色。</div>
-							</div>
-						</label>
 					</div>
 				</div>
 			</div>
@@ -183,10 +234,6 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 				<label class="block">
 					<div class="admin-label">个人简介 (Bio)</div>
 					<textarea name="profileBio" rows="3" placeholder="写点什么介绍你自己..." class="w-full">{settings.profileBio}</textarea>
-				</label>
-				<label class="block">
-					<div class="admin-label">Favicon 路径</div>
-					<input name="faviconSrc" value={settings.faviconSrc} placeholder="/favicon.svg" class="w-full" />
 				</label>
 			</div>
 		</section>

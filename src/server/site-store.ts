@@ -14,10 +14,15 @@ export async function getSiteSettings(): Promise<AdminSiteSettings> {
 		const parsed = JSON.parse(raw) as Partial<AdminSiteSettings>;
 		const bannerPosition =
 			parsed.bannerPosition === "center" ? "center" : "top";
+		const faviconSrc =
+			parsed.faviconSrc === "public/favicon/corvusx.svg"
+				? "/favicon/corvusx.svg"
+				: parsed.faviconSrc ?? defaultSiteSettings.faviconSrc;
 		return {
 			...defaultSiteSettings,
 			...parsed,
 			bannerPosition,
+			faviconSrc,
 			profileLinks: parsed.profileLinks ?? defaultSiteSettings.profileLinks,
 			navLinks: parsed.navLinks ?? defaultSiteSettings.navLinks,
 		};

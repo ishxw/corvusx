@@ -219,6 +219,7 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 		const items = getVisibleItems();
 		count.textContent = String(items.length);
 		emptyState.classList.toggle("hidden", items.length > 0);
+		emptyState.classList.toggle("flex", items.length === 0);
 
 		if (items.length === 0) {
 			grid.innerHTML = "";

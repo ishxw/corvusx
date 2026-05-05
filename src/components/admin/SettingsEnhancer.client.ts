@@ -286,6 +286,14 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 			});
 
 			if (response.ok) {
+				const savedHue = formData.get("themeHue");
+				if (savedHue !== null) {
+					if (typeof localStorage !== "undefined") {
+						localStorage.setItem("hue", String(savedHue));
+					}
+					document.documentElement.style.setProperty("--hue", String(savedHue));
+				}
+
 				window.showAdminToast?.("站点设置已成功保存。", "success");
 				isDirty = false;
 				initialData = formData;
