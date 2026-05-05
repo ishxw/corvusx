@@ -5,7 +5,7 @@ import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getRuntimeRenderedPosts } from "@/server/public-posts";
 
-const sortedPostsList = await getRuntimeRenderedPosts(!import.meta.env.PROD);
+const sortedPostsList = await getRuntimeRenderedPosts(false);
 ---
 
 <MainGridLayout title={i18n(I18nKey.archive)}>

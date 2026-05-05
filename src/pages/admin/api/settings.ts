@@ -14,8 +14,8 @@ function parseTocDepth(value: string, fallback: 1 | 2 | 3): 1 | 2 | 3 {
 	return fallback;
 }
 
-function parseBannerMode(value: string, fallback: "top" | "center" | "full"): "top" | "center" | "full" {
-	return value === "full" || value === "top" || value === "center" ? (value as any) : fallback;
+function parseBannerMode(value: string, fallback: "top" | "center"): "top" | "center" {
+	return value === "top" || value === "center" ? (value as any) : fallback;
 }
 
 function normalizeText(value: FormDataEntryValue | null, fallback: string): string {

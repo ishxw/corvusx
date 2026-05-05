@@ -5,6 +5,9 @@ type PostListOptions = {
 declare global {
 	interface Window {
 		initAdminPostList?: (options: PostListOptions) => void;
+		showAdminConfirm?: (message: string) => Promise<boolean>;
+		showAdminAlert?: (message: string, title?: string) => Promise<void>;
+		showAdminToast?: (message: string, tone?: string) => void;
 	}
 }
 
@@ -61,7 +64,7 @@ function initAdminPostList(options: PostListOptions) {
 	});
 
 	for (const button of batchButtons) {
-		button.addEventListener("click", (event) => {
+		button.addEventListener("click", async (event) => {
 			const selectedCount = getPostCheckboxes().filter((checkbox) => checkbox.checked).length;
 			if (selectedCount === 0) {
 				event.preventDefault();
@@ -70,9 +73,12 @@ function initAdminPostList(options: PostListOptions) {
 			}
 
 			const message = button.dataset.confirm;
-			if (message && !window.confirm(message.replace("{count}", String(selectedCount)))) {
+			if (message) {
 				event.preventDefault();
-				return;
+				const confirmed = await window.showAdminConfirm?.(
+					message.replace("{count}", String(selectedCount)),
+				);
+				if (!confirmed) return;
 			}
 
 			// Robust Action Capturing
@@ -80,6 +86,11 @@ function initAdminPostList(options: PostListOptions) {
 			const actionValue = button.dataset.batchSubmit || button.getAttribute("value");
 			if (actionField && actionValue) {
 				actionField.value = actionValue;
+			}
+
+			// Manually trigger form submission if we intercepted the click
+			if (message) {
+				form.requestSubmit(button);
 			}
 		});
 	}

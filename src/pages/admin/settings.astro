@@ -167,7 +167,6 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 							<select name="bannerPosition" class="w-full">
 								<option value="top" selected={settings.bannerPosition === "top"}>顶部 (Top)</option>
 								<option value="center" selected={settings.bannerPosition === "center"}>居中 (Center)</option>
-								<option value="full" selected={settings.bannerPosition === "full"}>拉伸铺满 (Full Page)</option>
 							</select>
 						</label>
 						<div class="flex items-end pb-3">
@@ -201,16 +200,16 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 						配置首页侧边栏显示的社交平台入口。
 					</p>
 				</div>
-				<button type="button" data-add-profile-link class="btn-regular rounded-2xl px-5 py-3 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">添加项目</button>
+				<button type="button" data-add-row="profile" class="btn-regular rounded-2xl px-5 py-3 text-xs font-bold uppercase tracking-widest">添加社交</button>
 			</div>
 			
 			<div id="profile-links-container" class="grid gap-4 sm:grid-cols-1">
 				{settings.profileLinks.map((item) => (
-					<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
-						<div class="grid gap-6 xl:grid-cols-[1fr_2.5fr_1.2fr_auto] xl:items-end">
+					<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-5 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
+						<div class="grid gap-5 xl:grid-cols-[1fr_2fr_1.2fr_auto] xl:items-end">
 							<label class="block">
-								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">名称</div>
-								<input data-field="name" value={item.name} placeholder="GitHub" class="!py-2.5 !text-sm" />
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">社交名称</div>
+								<input data-field="name" value={item.name} placeholder="例如：GitHub" class="!py-2.5 !text-sm" />
 							</label>
 							<label class="block">
 								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">链接 URL</div>
@@ -239,16 +238,16 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 						自定义顶部导航栏。
 					</p>
 				</div>
-				<button type="button" data-add-nav-link class="btn-regular rounded-2xl px-5 py-3 text-xs font-bold uppercase tracking-widest">添加菜单</button>
+				<button type="button" data-add-row="nav" class="btn-regular rounded-2xl px-5 py-3 text-xs font-bold uppercase tracking-widest">添加导航</button>
 			</div>
 			
 			<div id="nav-links-container" class="grid gap-4 sm:grid-cols-1">
 				{settings.navLinks.map((item) => (
-					<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
-						<div class="grid gap-6 xl:grid-cols-[1fr_2.5fr_1.2fr_auto_auto] xl:items-end">
+					<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-5 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
+						<div class="grid gap-5 xl:grid-cols-[1fr_2fr_1.2fr_auto_auto] xl:items-end">
 							<label class="block">
-								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">显示文字</div>
-								<input data-field="name" value={item.name} placeholder="关于" class="!py-2.5 !text-sm" />
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">导航文字</div>
+								<input data-field="name" value={item.name} placeholder="例如：关于" class="!py-2.5 !text-sm" />
 							</label>
 							<label class="block">
 								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">目标路径 / URL</div>
@@ -329,7 +328,7 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 		</section>
 
 		<!-- Floating Save Bar -->
-		<div class="fixed bottom-10 left-1/2 z-50 w-full max-w-7xl -translate-x-1/2 px-6">
+		<div id="admin-save-bar" class="fixed bottom-10 left-1/2 z-50 w-full max-w-7xl -translate-x-1/2 px-6 transition-all duration-500 translate-y-24 opacity-0 pointer-events-none">
 			<div class="flex items-center justify-between rounded-[2.5rem] border border-white/10 bg-black/80 p-3 pl-8 shadow-2xl backdrop-blur-xl dark:bg-white/10">
 				<div class="hidden text-xs font-black uppercase tracking-[0.2em] text-white/40 md:block">
 					检测到未保存的更改
@@ -347,16 +346,16 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 		<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-5 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
 			<div class="grid gap-5 xl:grid-cols-[1fr_2fr_1.2fr_auto] xl:items-end">
 				<label class="block">
-					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">名称</div>
-					<input data-field="name" placeholder="项目名称" class="!py-2.5 !text-sm" />
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">社交名称</div>
+					<input data-field="name" placeholder="例如：GitHub" class="!py-2.5 !text-sm" />
 				</label>
 				<label class="block">
 					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">链接 URL</div>
-					<input data-field="url" placeholder="https://..." class="!py-2.5 !text-sm" />
+					<input data-field="url" placeholder="https://github.com/..." class="!py-2.5 !text-sm" />
 				</label>
 				<label class="block">
 					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">图标 ID</div>
-					<input data-field="icon" placeholder="fa6-brands:..." class="!py-2.5 !text-sm font-mono" />
+					<input data-field="icon" placeholder="fa6-brands:github" class="!py-2.5 !text-sm font-mono" />
 				</label>
 				<button type="button" data-remove-row class="h-11 rounded-2xl bg-rose-500/10 px-5 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500 hover:text-white">删除</button>
 			</div>
@@ -367,16 +366,16 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 		<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-5 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
 			<div class="grid gap-5 xl:grid-cols-[1fr_2fr_1.2fr_auto_auto] xl:items-end">
 				<label class="block">
-					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">显示文字</div>
-					<input data-field="name" placeholder="菜单名" class="!py-2.5 !text-sm" />
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">导航文字</div>
+					<input data-field="name" placeholder="例如：归档" class="!py-2.5 !text-sm" />
 				</label>
 				<label class="block">
 					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">目标路径 / URL</div>
-					<input data-field="url" placeholder="/path/" class="!py-2.5 !text-sm" />
+					<input data-field="url" placeholder="/archive/" class="!py-2.5 !text-sm" />
 				</label>
 				<label class="block">
 					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">图标 ID (可选)</div>
-					<input data-field="icon" placeholder="fa6-solid:..." class="!py-2.5 !text-sm font-mono" />
+					<input data-field="icon" placeholder="fa6-solid:box-archive" class="!py-2.5 !text-sm font-mono" />
 				</label>
 				<label class="flex h-11 items-center gap-3 rounded-2xl border border-black/5 bg-white px-4 transition-colors hover:border-[var(--primary)] dark:border-white/5 dark:bg-black/20">
 					<input type="checkbox" data-field="external" class="h-4 w-4 accent-[var(--primary)]" />

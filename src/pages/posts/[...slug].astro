@@ -15,7 +15,6 @@ import { formatDateToYYYYMMDD } from "../../utils/date-utils";
 
 const slug = Astro.params.slug || "";
 const allowUnpublished =
-	!import.meta.env.PROD ||
 	Boolean(Astro.locals.adminUser) ||
 	Astro.url.searchParams.get("preview") === "1";
 const entry = await getRuntimeRenderedPostBySlug(slug, allowUnpublished);

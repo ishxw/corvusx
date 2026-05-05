@@ -7,7 +7,7 @@ import { buildPagination, getRuntimeRenderedPosts } from "@/server/public-posts"
 
 const pageParam = Astro.params.page;
 const currentPage = pageParam ? Number(pageParam) : 1;
-const allBlogPosts = await getRuntimeRenderedPosts(!import.meta.env.PROD);
+const allBlogPosts = await getRuntimeRenderedPosts(false);
 const pageInfo = buildPagination(currentPage, allBlogPosts.length, PAGE_SIZE);
 const pageData = allBlogPosts.slice(pageInfo.start, pageInfo.end);
 const len = pageData.length;

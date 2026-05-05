@@ -14,12 +14,21 @@ let rangeEl: HTMLInputElement;
 function applyHue() {
 	if (typeof document === "undefined") return;
 	document.documentElement.style.setProperty("--hue", String(hue));
+	// In admin, we don't save to localStorage here because this is for setting the global default,
+	// which is saved via the form submission.
 }
 
 async function resetHue() {
 	hue = defaultHue;
 	await tick();
 	rangeEl?.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function applyToCurrentSession() {
+	if (typeof localStorage !== "undefined") {
+		localStorage.setItem("hue", String(hue));
+		window.showAdminToast?.("主题色已应用至当前浏览器会话。");
+	}
 }
 
 $: if (hue || hue === 0) {
@@ -35,18 +44,31 @@ $: if (hue || hue === 0) {
 				before:absolute before:-left-3 before:top-[0.33rem]"
 		>
 			{i18n(I18nKey.themeColor)}
-			<button
-				type="button"
-				aria-label="Reset to Default"
-				class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
-				class:opacity-0={hue === defaultHue}
-				class:pointer-events-none={hue === defaultHue}
-				on:click={resetHue}
-			>
-				<div class="text-[var(--btn-content)]">
-					<Icon icon="fa6-solid:arrow-rotate-left" class="text-[0.875rem]"></Icon>
-				</div>
-			</button>
+			<div class="flex gap-1">
+				<button
+					type="button"
+					aria-label="Reset to Default"
+					class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
+					class:opacity-0={hue === defaultHue}
+					class:pointer-events-none={hue === defaultHue}
+					on:click={resetHue}
+					title="恢复预设值"
+				>
+					<div class="text-[var(--btn-content)]">
+						<Icon icon="fa6-solid:arrow-rotate-left" class="text-[0.875rem]"></Icon>
+					</div>
+				</button>
+				<button
+					type="button"
+					class="btn-regular w-7 h-7 rounded-md active:scale-90 will-change-transform"
+					on:click={applyToCurrentSession}
+					title="同步至当前会话"
+				>
+					<div class="text-[var(--btn-content)]">
+						<Icon icon="fa6-solid:check" class="text-[0.875rem]"></Icon>
+					</div>
+				</button>
+			</div>
 		</div>
 		<div class="flex gap-1">
 			<div

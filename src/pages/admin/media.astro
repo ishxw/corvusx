@@ -2,20 +2,18 @@
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import { listAdminMedia } from "@/server/media-store";
 
+export const prerender = false;
+
 if (!Astro.locals.adminUser) {
 	return Astro.redirect("/admin/login/");
 }
 
 const images = await listAdminMedia();
-const success = Astro.url.searchParams.get("success");
-const error = Astro.url.searchParams.get("error");
 ---
 
 <AdminLayout
-	title="媒体库"
+	title="素材管理"
 	description="统一管理博客用到的上传图片。你可以在这里上传、搜索、复制路径和删除素材，文章编辑页与站点设置页也会共用这套素材库。"
-	success={success ? "素材上传成功。" : null}
-	error={error === "missing-file" ? "请先选择一个图片文件再上传。" : null}
 >
 	<div class="grid gap-8 xl:grid-cols-[380px_1fr]">
 		<!-- Left: Upload Section -->
@@ -29,24 +27,22 @@ const error = Astro.url.searchParams.get("error");
 				</div>
 
 				<form
-					method="post"
-					action="/admin/api/media/"
-					enctype="multipart/form-data"
+					id="upload-form"
 					class="space-y-6"
 				>
 					<label class="group block cursor-pointer">
 						<div class="admin-label">选择图片</div>
-						<div class="relative flex min-h-[120px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-black/5 bg-black/[0.02] transition-colors group-hover:border-[var(--primary)]/30 group-hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:group-hover:bg-white/[0.04]">
+						<div class="relative flex min-h-[120px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-black/5 bg-black/[0.02] transition-colors group-hover:border-[var(--primary)]/30 group-hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:group-hover:bg-white/[0.04]" data-upload-container>
 							<svg xmlns="http://www.w3.org/2000/svg" class="mb-2 h-8 w-8 text-black/20 dark:text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-							<div class="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 dark:text-white/30">点击或拖拽上传</div>
-							<input type="file" name="file" accept="image/*" required class="absolute inset-0 opacity-0 cursor-pointer" />
+							<div class="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 dark:text-white/30" data-upload-placeholder>点击或拖拽上传</div>
+							<input type="file" name="file" accept="image/*" required class="absolute inset-0 opacity-0 cursor-pointer" data-upload-input />
 						</div>
 						<div class="mt-3 text-[10px] leading-relaxed text-black/40 dark:text-white/30">
-							支持 JPG, PNG, WEBP 等。文件将保存至 <code class="rounded bg-black/5 px-1 font-mono dark:bg-white/5">/uploads/</code>。
+							支持 JPG, PNG, WEBP 等。文件将保存至 <code class="rounded bg-black/5 px-1 font-mono dark:bg-white/5">/data/uploads/</code>。
 						</div>
 					</label>
 
-					<button type="submit" class="btn-regular w-full rounded-2xl py-4 font-black shadow-lg">
+					<button type="submit" class="btn-regular w-full rounded-2xl py-4 font-black shadow-lg" data-upload-button>
 						开始上传
 					</button>
 				</form>
@@ -74,23 +70,31 @@ const error = Astro.url.searchParams.get("error");
 					</p>
 				</div>
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<div class="relative group">
-						<svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-black/30 transition-colors group-focus-within:text-[var(--primary)] dark:text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+					<div class="relative group flex-1 min-w-0">
+						<svg xmlns="http://www.w3.org/2000/svg"
+							class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-black/30 transition-colors group-focus-within:text-[var(--primary)] dark:text-white/30"
+							viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+							stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="11" cy="11" r="8"/>
+							<path d="m21 21-4.3-4.3"/>
+						</svg>
 						<input
 							type="search"
 							placeholder="搜索文件名..."
 							data-media-standalone-search
-							class="w-full !pl-11 sm:w-72"
+							class="w-full !pl-11"
 						/>
 					</div>
-					<select data-media-standalone-sort class="sm:w-48">
-						<option value="newest">最新上传</option>
-						<option value="oldest">最早上传</option>
-						<option value="name-asc">文件名 A-Z</option>
-						<option value="name-desc">文件名 Z-A</option>
-						<option value="size-desc">体积：大到小</option>
-						<option value="size-asc">体积：小到大</option>
-					</select>
+					<div class="shrink-0 w-full sm:w-44">
+						<select data-media-standalone-sort class="w-full text-sm py-1.5">
+							<option value="newest">最新上传</option>
+							<option value="oldest">最早上传</option>
+							<option value="name-asc">文件名 A-Z</option>
+							<option value="name-desc">文件名 Z-A</option>
+							<option value="size-desc">体积：大到小</option>
+							<option value="size-asc">体积：小到大</option>
+						</select>
+					</div>
 				</div>
 			</div>
 
@@ -110,7 +114,7 @@ const error = Astro.url.searchParams.get("error");
 							<div class="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 dark:bg-white/5">
 								<img src={image.url} alt={image.name} class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
 								<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-									<button type="button" class="btn-regular scale-90 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-transform group-hover:scale-100" data-copy-value={image.url}>复制路径</button>
+									<button type="button" class="btn-regular scale-90 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-transform group-hover:scale-100" data-copy-value={image.url.split('?')[0]}>复制路径</button>
 								</div>
 							</div>
 							<div class="min-w-0 flex-1 px-1">
@@ -143,6 +147,43 @@ const error = Astro.url.searchParams.get("error");
 
 	<script is:inline>
 		const manager = document.querySelector("[data-standalone-media-manager]");
+		
+		// Handle upload preview
+		const uploadForm = document.getElementById("upload-form");
+		const uploadInput = document.querySelector("[data-upload-input]");
+		const uploadContainer = document.querySelector("[data-upload-container]");
+		const uploadPlaceholder = document.querySelector("[data-upload-placeholder]");
+		const uploadButton = document.querySelector("[data-upload-button]");
+
+		if (uploadInput instanceof HTMLInputElement && uploadContainer instanceof HTMLElement) {
+			uploadInput.addEventListener("change", () => {
+				const file = uploadInput.files?.[0];
+				if (file) {
+					const reader = new FileReader();
+					reader.onload = (e) => {
+						// Clear previous preview
+						uploadContainer.querySelectorAll("[data-preview]").forEach(el => el.remove());
+						uploadContainer.querySelector("svg")?.classList.add("hidden");
+						if (uploadPlaceholder) uploadPlaceholder.classList.add("hidden");
+
+						const img = document.createElement("img");
+						img.src = e.target.result;
+						img.className = "absolute inset-0 h-full w-full object-cover rounded-2xl opacity-40 pointer-events-none";
+						img.setAttribute("data-preview", "");
+						
+						const text = document.createElement("div");
+						text.className = "relative z-10 px-4 text-center text-[10px] font-black uppercase tracking-wider text-black/60 dark:text-white/80 pointer-events-none";
+						text.textContent = `已选择：${file.name}`;
+						text.setAttribute("data-preview", "");
+
+						uploadContainer.prepend(img);
+						uploadContainer.append(text);
+					};
+					reader.readAsDataURL(file);
+				}
+			});
+		}
+
 		if (manager) {
 			const searchInput = manager.querySelector("[data-media-standalone-search]");
 			const sortSelect = manager.querySelector("[data-media-standalone-sort]");
@@ -150,7 +191,7 @@ const error = Astro.url.searchParams.get("error");
 			const toast = manager.querySelector("[data-media-standalone-toast]");
 			const emptyStates = Array.from(manager.querySelectorAll("[data-media-standalone-empty]"));
 			const count = manager.querySelector("[data-media-standalone-count]");
-			const items = Array.from(manager.querySelectorAll("[data-media-item]"));
+			let items = Array.from(manager.querySelectorAll("[data-media-item]"));
 
 			const showToast = (message, tone = "success") => {
 				if (!(toast instanceof HTMLElement)) return;
@@ -162,6 +203,13 @@ const error = Astro.url.searchParams.get("error");
 				toast.classList.remove("hidden");
 				window.setTimeout(() => toast.classList.add("hidden"), 2500);
 			};
+
+			// Check for success message in sessionStorage
+			const pendingToast = sessionStorage.getItem("media-manager-toast");
+			if (pendingToast) {
+				showToast(pendingToast);
+				sessionStorage.removeItem("media-manager-toast");
+			}
 
 			const applyFilters = () => {
 				if (!(searchInput instanceof HTMLInputElement) || !(sortSelect instanceof HTMLSelectElement)) return;
@@ -200,6 +248,37 @@ const error = Astro.url.searchParams.get("error");
 			searchInput?.addEventListener("input", applyFilters);
 			sortSelect?.addEventListener("change", applyFilters);
 
+			// Handle Upload AJAX
+			uploadForm?.addEventListener("submit", async (e) => {
+				e.preventDefault();
+				if (!uploadInput.files?.length) return;
+
+				const formData = new FormData(uploadForm);
+				uploadButton.disabled = true;
+				uploadButton.textContent = "上传中...";
+
+				try {
+					const response = await fetch("/admin/api/media/", {
+						method: "POST",
+						body: formData,
+					});
+
+					if (response.ok) {
+						sessionStorage.setItem("media-manager-toast", "素材上传成功。");
+						window.location.reload();
+					} else {
+						const data = await response.json();
+						showToast(data.error || "上传失败", "warning");
+						uploadButton.disabled = false;
+						uploadButton.textContent = "开始上传";
+					}
+				} catch (err) {
+					showToast("网络错误，请重试", "warning");
+					uploadButton.disabled = false;
+					uploadButton.textContent = "开始上传";
+				}
+			});
+
 			manager.addEventListener("click", async (event) => {
 				const target = event.target;
 				if (!(target instanceof HTMLElement)) return;
@@ -217,7 +296,8 @@ const error = Astro.url.searchParams.get("error");
 				const deleteButton = target.closest("[data-delete-value]");
 				if (deleteButton instanceof HTMLElement) {
 					const value = deleteButton.getAttribute("data-delete-value") || "";
-					if (!value || !confirm(`确认删除 ${value} 吗？`)) return;
+					const confirmed = await window.showAdminConfirm?.(`确认删除素材 ${value} 吗？此操作不可撤销。`);
+					if (!confirmed) return;
 
 					const response = await fetch("/admin/api/media/", {
 						method: "DELETE",
@@ -228,7 +308,11 @@ const error = Astro.url.searchParams.get("error");
 					});
 
 					if (response.ok) {
-						deleteButton.closest("[data-media-item]")?.remove();
+						const itemEl = deleteButton.closest("[data-media-item]");
+						if (itemEl) {
+							items = items.filter(i => i !== itemEl);
+							itemEl.remove();
+						}
 						showToast("素材已删除。");
 						applyFilters();
 					} else {
@@ -240,7 +324,7 @@ const error = Astro.url.searchParams.get("error");
 				const renameButton = target.closest("[data-rename-value]");
 				if (renameButton instanceof HTMLElement) {
 					const oldName = renameButton.getAttribute("data-rename-value") || "";
-					const newName = prompt("请输入新的文件名：", oldName);
+					const newName = await window.showAdminPrompt?.("请输入新的文件名：", oldName);
 					if (!newName || newName === oldName) return;
 
 					const response = await fetch("/admin/api/media/", {
@@ -252,8 +336,8 @@ const error = Astro.url.searchParams.get("error");
 					});
 
 					if (response.ok) {
-						showToast("重命名成功，请刷新页面查看变更。");
-						setTimeout(() => window.location.reload(), 1000);
+						sessionStorage.setItem("media-manager-toast", "重命名成功。");
+						window.location.reload();
 					} else {
 						const err = await response.json();
 						showToast(err.error || "重命名失败", "warning");

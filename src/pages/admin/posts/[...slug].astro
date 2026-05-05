@@ -136,7 +136,7 @@ const tagSuggestions = Array.from(
 						<div class="admin-label">封面图片 (Cover)</div>
 						<div class="flex gap-3">
 							<input id="image" name="image" value={post.image} data-media-input class="flex-1" />
-							<button type="button" data-open-media-picker data-target-input="image" data-picker-label="为文章选择封面图" class="btn-plain shrink-0 rounded-2xl px-5 font-bold text-sm">库</button>
+							<button type="button" data-open-media-picker data-target-input="image" data-picker-label="为文章选择封面图" class="btn-plain shrink-0 rounded-2xl px-5 font-bold text-sm">选择</button>
 						</div>
 					</label>
 					<div class="relative aspect-[21/9] w-full overflow-hidden rounded-[2.5rem] border-2 border-dashed border-black/5 bg-black/[0.02] dark:border-white/5 dark:bg-white/[0.02]">
@@ -236,7 +236,7 @@ const tagSuggestions = Array.from(
 
 		<!-- Floating Action Bar -->
 		<div class="fixed bottom-10 left-1/2 z-50 flex w-full max-w-7xl -translate-x-1/2 items-center justify-between px-6">
-			<button type="submit" formaction="/admin/api/posts/delete/" class="group flex items-center gap-3 rounded-[2.5rem] border border-rose-500/20 bg-rose-500/10 px-10 py-5 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-500 hover:text-white shadow-2xl" onclick="return confirm('确认彻底删除这篇文章吗？')">
+			<button type="button" data-delete-post-btn data-confirm="确认彻底删除这篇文章吗？" class="group flex items-center gap-3 rounded-[2.5rem] border border-rose-500/20 bg-rose-500/10 px-10 py-5 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-all hover:bg-rose-500 hover:text-white shadow-2xl">
 				<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
 				彻底删除
 			</button>
@@ -264,9 +264,29 @@ const tagSuggestions = Array.from(
 			}
 		});
 
+		const deleteBtn = document.querySelector("[data-delete-post-btn]");
+		deleteBtn?.addEventListener("click", async () => {
+			const confirmed = await window.showAdminConfirm?.(deleteBtn.dataset.confirm);
+			if (confirmed) {
+				const deleteForm = document.createElement("form");
+				deleteForm.method = "POST";
+				deleteForm.action = "/admin/api/posts/delete/";
+				
+				// Keep current slug if needed by API
+				const slugInput = document.createElement("input");
+				slugInput.type = "hidden";
+				slugInput.name = "slug";
+				slugInput.value = window.location.pathname.split("/").filter(Boolean).pop();
+				deleteForm.appendChild(slugInput);
+				
+				document.body.appendChild(deleteForm);
+				deleteForm.submit();
+			}
+		});
+
 		document.getElementById("copy-preview-link")?.addEventListener("click", async () => {
 			await navigator.clipboard.writeText(window.location.origin + previewUrl);
-			alert("预览链接已复制！");
+			window.showAdminToast?.("预览链接已复制到剪贴板！");
 		});
 	</script>
 

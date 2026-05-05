@@ -6,7 +6,7 @@ export type AdminSiteSettings = {
 	themeFixed: boolean;
 	bannerEnabled: boolean;
 	bannerSrc: string;
-	bannerPosition: "top" | "center" | "full";
+	bannerPosition: "top" | "center";
 	tocEnabled: boolean;
 	tocDepth: 1 | 2 | 3;
 	faviconSrc: string;

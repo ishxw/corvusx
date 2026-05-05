@@ -8,18 +8,20 @@ export type AdminMediaItem = {
 	modifiedAt: string;
 };
 
-const UPLOAD_DIR = path.resolve("public/uploads");
+const UPLOAD_DIR = path.resolve("data/uploads");
 
 async function ensureUploadDir() {
 	await fs.mkdir(UPLOAD_DIR, { recursive: true });
 }
 
-function toMediaUrl(fileName: string): string {
-	return `/uploads/${fileName}`;
+export function toMediaUrl(fileName: string): string {
+	return `/uploads/${encodeURIComponent(fileName)}`;
 }
 
-function sanitizeMediaName(fileName: string): string {
-	return fileName.replace(/[^a-zA-Z0-9._-]/g, "-");
+export function sanitizeMediaName(fileName: string): string {
+	// Remove characters that are definitely illegal in file systems or problematic in URLs
+	// But preserve characters that are valid in most modern OSs and URL paths (like Chinese characters)
+	return fileName.replace(/[<>:"/\\|?*\x00-\x1F]/g, "-").replace(/-+/g, "-").trim();
 }
 
 export async function listAdminMedia(): Promise<AdminMediaItem[]> {
@@ -47,11 +49,21 @@ export async function listAdminMedia(): Promise<AdminMediaItem[]> {
 export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
 	await ensureUploadDir();
 
-	const sanitizedName = sanitizeMediaName(file.name || "upload.bin");
-	const fileName = `${Date.now()}-${sanitizedName}`;
-	const targetPath = path.join(UPLOAD_DIR, fileName);
-	const arrayBuffer = await file.arrayBuffer();
+	const originalName = file.name || "upload.bin";
+	const ext = path.extname(originalName);
+	const baseName = path.basename(originalName, ext);
+	
+	let fileName = originalName;
+	let targetPath = path.join(UPLOAD_DIR, fileName);
+	let counter = 1;
 
+	while (await fs.access(targetPath).then(() => true).catch(() => false)) {
+		fileName = `${baseName}-${counter}${ext}`;
+		targetPath = path.join(UPLOAD_DIR, fileName);
+		counter++;
+	}
+
+	const arrayBuffer = await file.arrayBuffer();
 	await fs.writeFile(targetPath, new Uint8Array(arrayBuffer));
 
 	const stats = await fs.stat(targetPath);
@@ -64,17 +76,28 @@ export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
 }
 
 export async function deleteAdminMedia(fileOrUrl: string): Promise<void> {
-	const fileName = path.basename(fileOrUrl);
+	const fileName = decodeURIComponent(path.basename(fileOrUrl.split("?")[0]));
 	const targetPath = path.join(UPLOAD_DIR, fileName);
 	await fs.rm(targetPath, { force: true });
 }
 
 export async function renameAdminMedia(oldName: string, newName: string): Promise<AdminMediaItem> {
-	const safeNewName = sanitizeMediaName(newName);
-	const oldPath = path.join(UPLOAD_DIR, path.basename(oldName));
+	const oldExt = path.extname(oldName);
+	let safeNewName = sanitizeMediaName(newName);
+	
+	// If the new name doesn't have an extension, preserve the old one
+	if (path.extname(safeNewName) === "" && oldExt !== "") {
+		safeNewName += oldExt;
+	}
+
+	const oldBasename = path.basename(oldName);
+	const oldPath = path.join(UPLOAD_DIR, oldBasename);
 	const newPath = path.join(UPLOAD_DIR, safeNewName);
 
-	if (await fs.access(newPath).then(() => true).catch(() => false)) {
+	// Case-insensitive check: if names differ ONLY in case, skip existence check
+	const isCaseOnlyChange = oldBasename.toLowerCase() === safeNewName.toLowerCase() && oldBasename !== safeNewName;
+
+	if (!isCaseOnlyChange && await fs.access(newPath).then(() => true).catch(() => false)) {
 		throw new Error("Target file already exists.");
 	}
 

@@ -12,6 +12,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.tmp*
 
 # environment variables
 .env
@@ -28,7 +29,6 @@ yarn.lock
 
 # local data and secrets
 data/
-public/uploads/
 
 # ide
 .idea

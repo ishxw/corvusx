@@ -7,7 +7,7 @@ import { getRuntimeTags, getTagUrl } from "@/server/runtime-taxonomy";
 import ButtonTag from "../control/ButtonTag.astro";
 import WidgetLayout from "./WidgetLayout.astro";
 
-const posts = await getRuntimeRenderedPosts(!import.meta.env.PROD);
+const posts = await getRuntimeRenderedPosts(false);
 const tags = getRuntimeTags(posts);
 
 const COLLAPSED_HEIGHT = "7.5rem";

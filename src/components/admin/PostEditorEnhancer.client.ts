@@ -13,6 +13,9 @@ type EnhancerOptions = {
 declare global {
 	interface Window {
 		initAdminPostEditor?: (options: EnhancerOptions) => void;
+		showAdminConfirm?: (message: string) => Promise<boolean>;
+		showAdminAlert?: (message: string, title?: string) => Promise<void>;
+		showAdminToast?: (message: string, tone?: string) => void;
 	}
 }
 
@@ -91,6 +94,7 @@ function initAdminPostEditor(options: EnhancerOptions) {
 
 	const updateDirtyState = (nextDirty: boolean) => {
 		isDirty = nextDirty;
+		if (window.adminIsDirty !== undefined) window.adminIsDirty = isDirty;
 	};
 
 	const setStatus = (
@@ -150,7 +154,7 @@ function initAdminPostEditor(options: EnhancerOptions) {
 		}, 300);
 	};
 
-	const maybeRestore = () => {
+	const maybeRestore = async () => {
 		const saved = localStorage.getItem(options.autosaveKey);
 		if (!saved) {
 			hideRestoreNotice();
@@ -163,10 +167,11 @@ function initAdminPostEditor(options: EnhancerOptions) {
 			const parsed = JSON.parse(saved) as Record<string, unknown>;
 			const shouldRestore =
 				!editor.value.trim() &&
-				window.confirm("检测到未提交的本地草稿，是否恢复？");
+				(await window.showAdminConfirm?.("检测到未提交的本地草稿，是否恢复？"));
 
 			if (!shouldRestore) {
 				setStatus("已忽略本地草稿。", "warning");
+				hideRestoreNotice();
 				return;
 			}
 
@@ -253,7 +258,7 @@ function initAdminPostEditor(options: EnhancerOptions) {
 	});
 
 	window.addEventListener("beforeunload", (event) => {
-		if (!isDirty) return;
+		if (!(window as any).adminIsDirty) return;
 		event.preventDefault();
 	});
 
@@ -279,7 +284,7 @@ function initAdminPostEditor(options: EnhancerOptions) {
 		});
 	}
 
-	maybeRestore();
+	void maybeRestore();
 	void render();
 	if (!localStorage.getItem(options.autosaveKey)) {
 		setStatus("已就绪。", "default");

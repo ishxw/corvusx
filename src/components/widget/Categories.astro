@@ -6,7 +6,7 @@ import { getRuntimeCategories } from "@/server/runtime-taxonomy";
 import ButtonLink from "../control/ButtonLink.astro";
 import WidgetLayout from "./WidgetLayout.astro";
 
-const posts = await getRuntimeRenderedPosts(!import.meta.env.PROD);
+const posts = await getRuntimeRenderedPosts(false);
 const categories = getRuntimeCategories(posts, i18n(I18nKey.uncategorized));
 
 const COLLAPSED_HEIGHT = "7.5rem";

@@ -24,6 +24,11 @@ type SettingsEnhancerOptions = {
 declare global {
 	interface Window {
 		initAdminSettingsEnhancer?: (options: SettingsEnhancerOptions) => void;
+		showAdminConfirm?: (message: string) => Promise<boolean>;
+		showAdminAlert?: (message: string, title?: string) => Promise<void>;
+		showAdminPrompt?: (message: string, defaultValue?: string, title?: string) => Promise<string | null>;
+		showAdminToast?: (message: string, tone?: string) => void;
+		adminIsDirty?: boolean;
 	}
 }
 
@@ -177,18 +182,32 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 		
 		const currentData = new FormData(form);
 		let dirty = false;
-		for (const [key, value] of currentData.entries()) {
-			if (initialData.get(key) !== value) {
+		
+		const initialKeys = Array.from(initialData.keys());
+		const currentKeys = Array.from(currentData.keys());
+		
+		// If the set of keys is different (e.g. checkbox changed), it's dirty
+		const allKeys = new Set([...initialKeys, ...currentKeys]);
+		
+		for (const key of allKeys) {
+			const initialValue = initialData.get(key);
+			const currentValue = currentData.get(key);
+			if (initialValue !== currentValue) {
 				dirty = true;
 				break;
 			}
 		}
-		isDirty = dirty;
 		
-		if (submitButton) {
-			submitButton.classList.toggle("ring-2", isDirty);
-			submitButton.classList.toggle("ring-[var(--primary)]", isDirty);
-			submitButton.classList.toggle("ring-offset-4", isDirty);
+		isDirty = dirty;
+		if (window.adminIsDirty !== undefined) window.adminIsDirty = isDirty;
+		
+		const saveBar = document.getElementById("admin-save-bar");
+		if (saveBar) {
+			if (isDirty) {
+				saveBar.classList.remove("translate-y-24", "opacity-0", "pointer-events-none");
+			} else {
+				saveBar.classList.add("translate-y-24", "opacity-0", "pointer-events-none");
+			}
 		}
 	};
 
@@ -283,7 +302,7 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 	});
 
 	window.addEventListener("beforeunload", (event) => {
-		if (!isDirty) return;
+		if (!(window as any).adminIsDirty) return;
 		event.preventDefault();
 	});
 

@@ -13,6 +13,7 @@ type MediaItem = {
 declare global {
 	interface Window {
 		initAdminMediaPicker?: (options: MediaPickerOptions) => void;
+		showAdminConfirm?: (message: string) => Promise<boolean>;
 	}
 }
 
@@ -226,25 +227,38 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 
 		grid.innerHTML = items
 			.map(
-				(item) => `
-					<div class="rounded-3xl border border-black/10 bg-black/[0.03] p-4 dark:border-white/10 dark:bg-white/[0.03]">
-						<img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.name)}" class="mb-3 aspect-video w-full rounded-2xl object-cover" />
-						<div class="mb-1 line-clamp-1 text-sm font-medium text-90">${escapeHtml(item.name)}</div>
-						<div class="mb-3 text-xs text-50">${formatFileSize(item.size)} · ${formatDate(item.modifiedAt)}</div>
-						<div class="mb-3 break-all rounded-2xl bg-black/5 px-3 py-2 text-xs text-50 dark:bg-white/5">${escapeHtml(item.url)}</div>
-						<div class="flex flex-wrap gap-2">
-							<button type="button" class="btn-regular rounded-2xl px-3 py-2 text-sm font-semibold" data-media-select="${escapeHtml(item.url)}">使用</button>
-							<button type="button" class="btn-plain rounded-2xl px-3 py-2 text-sm font-medium" data-media-copy="${escapeHtml(item.url)}">复制路径</button>
-							<button type="button" class="rounded-2xl bg-rose-500/12 px-3 py-2 text-sm font-medium text-rose-200 transition hover:bg-rose-500/20" data-media-delete="${escapeHtml(item.url)}">删除</button>
+				(item) => {
+					const cleanUrl = item.url.split('?')[0];
+					return `
+						<div class="group flex flex-col rounded-3xl border border-black/5 bg-black/[0.02] p-3 transition-all hover:bg-white hover:shadow-xl dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-black/40">
+							<div class="relative mb-3 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 dark:bg-white/5">
+								<img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.name)}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+								<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+									<button type="button" class="btn-regular scale-90 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-transform group-hover:scale-100" data-media-select="${escapeHtml(cleanUrl)}">选择使用</button>
+								</div>
+							</div>
+							<div class="px-1">
+								<div class="truncate text-xs font-bold text-black/80 dark:text-white/90" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+								<div class="mt-1 flex items-center justify-between text-[10px] font-medium text-black/30 dark:text-white/30">
+									<span>${formatFileSize(item.size)}</span>
+									<span>${formatDate(item.modifiedAt)}</span>
+								</div>
+								<div class="mt-3 flex gap-2">
+									<button type="button" class="btn-plain flex-1 rounded-lg py-2 text-[10px] font-bold" data-media-copy="${escapeHtml(cleanUrl)}">复制路径</button>
+									<button type="button" class="rounded-lg bg-rose-500/5 px-3 py-2 text-[10px] font-bold text-rose-500 transition-colors hover:bg-rose-500 hover:text-white" data-media-delete="${escapeHtml(cleanUrl)}">
+										<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+									</button>
+								</div>
+							</div>
 						</div>
-					</div>
-				`,
+					`;
+				}
 			)
 			.join("");
 	};
 
 	const loadItems = async () => {
-		setStatus("正在加载素材…");
+		setStatus("正在加载素材列表…");
 		try {
 			const response = await fetch(options.endpoint, {
 				headers: {
@@ -256,11 +270,11 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 			const payload = (await response.json()) as { items?: MediaItem[] };
 			allItems = payload.items || [];
 			renderItems();
-			setStatus("选择素材后会立即回填到当前字段。");
+			setStatus("点击“使用”可立即将路径回填到当前字段。");
 		} catch {
 			allItems = [];
 			renderItems();
-			setStatus("素材列表加载失败，请稍后重试。");
+			setStatus("素材列表加载失败，请重试。");
 		}
 	};
 
@@ -282,6 +296,39 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 		uploadForm.reset();
 	};
 
+	uploadInput.addEventListener("change", () => {
+		const file = uploadInput.files?.[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const container = uploadForm.querySelector(".relative.flex.min-h-\\[120px\\]");
+				if (container instanceof HTMLElement) {
+					// Clear previous preview if any
+					const oldPreview = container.querySelector("[data-preview-image]");
+					oldPreview?.remove();
+					const oldText = container.querySelector("[data-preview-text]");
+					oldText?.remove();
+					const oldSvg = container.querySelector("svg");
+					oldSvg?.classList.add("hidden");
+
+					const img = document.createElement("img");
+					img.src = e.target?.result as string;
+					img.className = "absolute inset-0 h-full w-full object-cover rounded-2xl opacity-40 pointer-events-none";
+					img.setAttribute("data-preview-image", "");
+					
+					const text = document.createElement("div");
+					text.className = "relative z-10 px-4 text-center text-[10px] font-black uppercase tracking-wider text-black/60 dark:text-white/80 pointer-events-none";
+					text.textContent = `已选择：${file.name}`;
+					text.setAttribute("data-preview-text", "");
+
+					container.prepend(img);
+					container.append(text);
+				}
+			};
+			reader.readAsDataURL(file);
+		}
+	});
+
 	const uploadMedia = async () => {
 		const file = uploadInput.files?.[0];
 		if (!file) {
@@ -301,6 +348,15 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 				body: formData,
 			});
 			if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
+			
+			// Restore upload area
+			const container = uploadForm.querySelector(".relative.flex.min-h-\\[120px\\]");
+			if (container instanceof HTMLElement) {
+				container.querySelector("[data-preview-image]")?.remove();
+				container.querySelector("[data-preview-text]")?.remove();
+				container.querySelector("svg")?.classList.remove("hidden");
+			}
+
 			uploadForm.reset();
 			await loadItems();
 			showToast("素材上传成功，列表已刷新。");
@@ -314,7 +370,9 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 	};
 
 	const deleteMedia = async (value: string) => {
-		if (!value || !window.confirm(`确认删除 ${value} 吗？`)) return;
+		if (!value) return;
+		const confirmed = await window.showAdminConfirm?.(`确认删除素材 ${value} 吗？此操作不可撤销。`);
+		if (!confirmed) return;
 		setStatus("正在删除素材…");
 
 		try {

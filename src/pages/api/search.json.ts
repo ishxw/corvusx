@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ request }) => {
 		});
 	}
 
-	const posts = await getRuntimeRenderedPosts(!import.meta.env.PROD);
+	const posts = await getRuntimeRenderedPosts(false);
 	const results = posts
 		.filter((post) => {
 			const haystack = [

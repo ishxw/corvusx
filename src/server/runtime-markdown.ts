@@ -74,10 +74,10 @@ export async function renderRuntimeMarkdown(markdown: string): Promise<{
 
 	const file = await unified()
 		.use(remarkParse)
-		.use(remarkDirective)
-		.use(remarkGfm)
 		.use(remarkMath)
+		.use(remarkGfm)
 		.use(remarkGithubAdmonitionsToDirectives)
+		.use(remarkDirective)
 		.use(remarkSectionize)
 		.use(parseDirectiveNode as any)
 		.use(remarkRehype, { allowDangerousHtml: true })
@@ -86,11 +86,11 @@ export async function renderRuntimeMarkdown(markdown: string): Promise<{
 		.use(rehypeComponents as any, {
 			components: {
 				github: GithubCardComponent as any,
-				note: (x: any, y: any) => AdmonitionComponent(x, y, "note"),
-				tip: (x: any, y: any) => AdmonitionComponent(x, y, "tip"),
-				important: (x: any, y: any) => AdmonitionComponent(x, y, "important"),
-				caution: (x: any, y: any) => AdmonitionComponent(x, y, "caution"),
-				warning: (x: any, y: any) => AdmonitionComponent(x, y, "warning"),
+				note: (props: any, children: any) => AdmonitionComponent(props, children, "note"),
+				tip: (props: any, children: any) => AdmonitionComponent(props, children, "tip"),
+				important: (props: any, children: any) => AdmonitionComponent(props, children, "important"),
+				caution: (props: any, children: any) => AdmonitionComponent(props, children, "caution"),
+				warning: (props: any, children: any) => AdmonitionComponent(props, children, "warning"),
 			},
 		} as any)
 		.use(rehypeExpressiveCode, {
