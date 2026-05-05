@@ -1,0 +1,30 @@
+---
+import Pagination from "../components/control/Pagination.astro";
+import PostPage from "../components/PostPage.astro";
+import { PAGE_SIZE } from "../constants/constants";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { buildPagination, getRuntimeRenderedPosts } from "@/server/public-posts";
+
+const pageParam = Astro.params.page;
+const currentPage = pageParam ? Number(pageParam) : 1;
+const allBlogPosts = await getRuntimeRenderedPosts(!import.meta.env.PROD);
+const pageInfo = buildPagination(currentPage, allBlogPosts.length, PAGE_SIZE);
+const pageData = allBlogPosts.slice(pageInfo.start, pageInfo.end);
+const len = pageData.length;
+
+const page = {
+	data: pageData,
+	currentPage: pageInfo.currentPage,
+	lastPage: pageInfo.lastPage,
+	start: pageInfo.start,
+	end: pageInfo.end,
+	total: allBlogPosts.length,
+	size: PAGE_SIZE,
+	url: pageInfo.url,
+};
+---
+
+<MainGridLayout>
+    <PostPage page={page}></PostPage>
+    <Pagination class="mx-auto onload-animation" page={page} style={`animation-delay: calc(var(--content-delay) + ${(len)*50}ms)`}></Pagination>
+</MainGridLayout>

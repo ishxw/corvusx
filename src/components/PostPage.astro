@@ -1,0 +1,30 @@
+---
+import type { RuntimeRenderedPost } from "@/server/public-posts";
+import { getPostUrlBySlug } from "@utils/url-utils";
+import PostCard from "./PostCard.astro";
+
+const { page } = Astro.props;
+
+let delay = 0;
+const interval = 50;
+---
+<div class="transition flex flex-col rounded-[var(--radius-large)] bg-[var(--card-bg)] py-1 md:py-0 md:bg-transparent md:gap-4 mb-4">
+    {page.data.map((entry: RuntimeRenderedPost) => (
+        <PostCard
+                title={entry.title}
+                tags={entry.tags}
+                category={entry.category}
+                published={entry.published}
+                updated={entry.updated}
+                url={getPostUrlBySlug(entry.slug)}
+                image={entry.image}
+                description={entry.description}
+                excerpt={entry.excerpt}
+                words={entry.words}
+                minutes={entry.minutes}
+                sourcePath={entry.sourcePath}
+                class:list="onload-animation"
+                style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}
+        ></PostCard>
+    ))}
+</div>

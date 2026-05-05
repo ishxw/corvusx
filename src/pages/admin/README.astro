@@ -1,0 +1,105 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+
+if (!Astro.locals.adminUser) {
+	return Astro.redirect("/admin/login/");
+}
+---
+
+<AdminLayout
+	title="后台使用说明"
+	description="帮助你快速理解 Corvusx 后台的数据逻辑、存储机制及部署建议。所有的后台配置与文章均可离线化管理。"
+>
+	<div class="space-y-10 pb-12">
+		<!-- Section: Features -->
+		<section class="card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">核心能力</h2>
+				<p class="mt-2 text-sm text-black/40 dark:text-white/40">后台提供了一套完整的无头 CMS (Headless CMS) 体验，同时保留了 Markdown 的灵活性。</p>
+			</div>
+			
+			<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+				{[
+					{ t: "文章全生命周期", d: "新建、编辑、存草稿、定时发布、批量分类与标签更新。" },
+					{ t: "高级编辑器", d: "实时预览、图片素材选择、片段插入、本地草稿自动回滚。" },
+					{ t: "全站配置管理", d: "站点标题、视觉品牌、导航菜单、社交链接与全站功能开关。" },
+					{ t: "一体化素材库", d: "统一管理上传文件，提供复制路径与一键删除功能。" },
+				].map(item => (
+					<div class="flex flex-col rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-colors hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]">
+						<div class="mb-3 text-xs font-black uppercase tracking-widest text-[var(--primary)]">{item.t}</div>
+						<p class="text-xs leading-relaxed text-black/50 dark:text-white/50">{item.d}</p>
+					</div>
+				))}
+			</div>
+		</section>
+
+		<!-- Section: Data Structure -->
+		<section class="card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">数据持久化</h2>
+				<p class="mt-2 text-sm text-black/40 dark:text-white/40">了解你的内容保存在哪里，确保迁移或部署时数据安全。</p>
+			</div>
+
+			<div class="grid gap-8 lg:grid-cols-2">
+				<div class="space-y-6">
+					<div class="flex items-start gap-4">
+						<div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-500">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+						</div>
+						<div class="space-y-2">
+							<div class="text-sm font-bold text-black/80 dark:text-white/80">内容文件 (Markdown)</div>
+							<p class="text-xs leading-relaxed text-black/40 dark:text-white/40">
+								文章直接保存至 <code class="rounded bg-black/5 px-1 font-mono dark:bg-white/5">src/content/posts/</code>。你依然可以通过 IDE 手动修改它们。
+							</p>
+						</div>
+					</div>
+					<div class="flex items-start gap-4">
+						<div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+						</div>
+						<div class="space-y-2">
+							<div class="text-sm font-bold text-black/80 dark:text-white/80">配置文件 (JSON)</div>
+							<p class="text-xs leading-relaxed text-black/40 dark:text-white/40">
+								站点全局配置、账号哈希、会话密钥与活动日志均存储在根目录下的 <code class="rounded bg-black/5 px-1 font-mono dark:bg-white/5">data/</code> 文件夹中。
+							</p>
+						</div>
+					</div>
+				</div>
+				<div class="space-y-6">
+					<div class="flex items-start gap-4">
+						<div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+						</div>
+						<div class="space-y-2">
+							<div class="text-sm font-bold text-black/80 dark:text-white/80">媒体资源</div>
+							<p class="text-xs leading-relaxed text-black/40 dark:text-white/40">
+								所有上传的图片会进入 <code class="rounded bg-black/5 px-1 font-mono dark:bg-white/5">public/uploads/</code>。路径在生成站点时是静态可访问的。
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Section: Deployment Suggestions -->
+		<section class="card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">生产环境部署建议</h2>
+				<p class="mt-2 text-sm text-black/40 dark:text-white/40">确保后台在云端能够稳定持久运行。</p>
+			</div>
+			
+			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				{[
+					{ t: "持久化存储", d: "如果部署在容器环境，请务必将 data/ 与 public/uploads/ 挂载至持久化卷，否则重启后配置与素材会丢失。" },
+					{ t: "Git 版本管理", d: "如果你需要将后台修改同步回代码库，可能需要配置自动化脚本或 CI 任务来拉取变更。" },
+					{ t: "安全策略", d: "虽然后台自带简单的安全保护，但建议在生产环境开启 HTTPS，并配置 Web 防火墙以拦截恶意暴力破解。" },
+				].map(card => (
+					<div class="rounded-[2rem] bg-[var(--primary)]/5 p-8 transition-transform hover:-translate-y-1 dark:bg-[var(--primary)]/10">
+						<div class="mb-4 text-xs font-black uppercase tracking-widest text-[var(--primary)]">{card.t}</div>
+						<p class="text-sm leading-relaxed text-black/60 dark:text-white/60">{card.d}</p>
+					</div>
+				))}
+			</div>
+		</section>
+	</div>
+</AdminLayout>

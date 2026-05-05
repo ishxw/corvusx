@@ -1,0 +1,267 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import { listAdminMedia } from "@/server/media-store";
+
+if (!Astro.locals.adminUser) {
+	return Astro.redirect("/admin/login/");
+}
+
+const images = await listAdminMedia();
+const success = Astro.url.searchParams.get("success");
+const error = Astro.url.searchParams.get("error");
+---
+
+<AdminLayout
+	title="媒体库"
+	description="统一管理博客用到的上传图片。你可以在这里上传、搜索、复制路径和删除素材，文章编辑页与站点设置页也会共用这套素材库。"
+	success={success ? "素材上传成功。" : null}
+	error={error === "missing-file" ? "请先选择一个图片文件再上传。" : null}
+>
+	<div class="grid gap-8 xl:grid-cols-[380px_1fr]">
+		<!-- Left: Upload Section -->
+		<aside class="space-y-6">
+			<section class="card-base p-8" data-admin-card>
+				<div class="mb-8">
+					<h2 class="text-xl font-black tracking-tight text-black/90 dark:text-white/95">上传素材</h2>
+					<p class="mt-2 text-xs leading-relaxed text-black/50 dark:text-white/50">
+						建议使用清晰、命名明确的文件，方便后续引用。
+					</p>
+				</div>
+
+				<form
+					method="post"
+					action="/admin/api/media/"
+					enctype="multipart/form-data"
+					class="space-y-6"
+				>
+					<label class="group block cursor-pointer">
+						<div class="admin-label">选择图片</div>
+						<div class="relative flex min-h-[120px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-black/5 bg-black/[0.02] transition-colors group-hover:border-[var(--primary)]/30 group-hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:group-hover:bg-white/[0.04]">
+							<svg xmlns="http://www.w3.org/2000/svg" class="mb-2 h-8 w-8 text-black/20 dark:text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+							<div class="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 dark:text-white/30">点击或拖拽上传</div>
+							<input type="file" name="file" accept="image/*" required class="absolute inset-0 opacity-0 cursor-pointer" />
+						</div>
+						<div class="mt-3 text-[10px] leading-relaxed text-black/40 dark:text-white/30">
+							支持 JPG, PNG, WEBP 等。文件将保存至 <code class="rounded bg-black/5 px-1 font-mono dark:bg-white/5">/uploads/</code>。
+						</div>
+					</label>
+
+					<button type="submit" class="btn-regular w-full rounded-2xl py-4 font-black shadow-lg">
+						开始上传
+					</button>
+				</form>
+			</section>
+
+			<div class="card-base space-y-4 bg-[var(--primary)]/5 p-6 dark:bg-[var(--primary)]/10">
+				<div class="flex items-center gap-3 text-[var(--primary)]">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+					<span class="text-xs font-black uppercase tracking-widest">使用提示</span>
+				</div>
+				<p class="text-xs leading-relaxed text-black/50 dark:text-white/60">
+					上传后点击“复制路径”，直接在文章 Markdown 中使用。
+					例如：<code class="font-mono opacity-80">![](/uploads/demo.png)</code>
+				</p>
+			</div>
+		</aside>
+
+		<!-- Right: Gallery Section -->
+		<section class="card-base p-8 md:p-10" data-admin-card data-standalone-media-manager>
+			<div class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+				<div>
+					<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">已上传素材</h2>
+					<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">
+						当前库中共有 <span class="font-bold text-[var(--primary)]" data-media-standalone-count>{images.length}</span> 项素材。
+					</p>
+				</div>
+				<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+					<div class="relative group">
+						<svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-black/30 transition-colors group-focus-within:text-[var(--primary)] dark:text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+						<input
+							type="search"
+							placeholder="搜索文件名..."
+							data-media-standalone-search
+							class="w-full !pl-11 sm:w-72"
+						/>
+					</div>
+					<select data-media-standalone-sort class="sm:w-48">
+						<option value="newest">最新上传</option>
+						<option value="oldest">最早上传</option>
+						<option value="name-asc">文件名 A-Z</option>
+						<option value="name-desc">文件名 Z-A</option>
+						<option value="size-desc">体积：大到小</option>
+						<option value="size-asc">体积：小到大</option>
+					</select>
+				</div>
+			</div>
+
+			<div data-media-standalone-toast class="fixed bottom-10 right-10 z-50 hidden"></div>
+
+			{images.length > 0 ? (
+				<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" data-media-standalone-grid>
+					{images.map((image) => (
+						<div
+							class="group flex flex-col rounded-3xl border border-black/5 bg-black/[0.02] p-4 transition-all hover:bg-white hover:shadow-xl dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-black/40"
+							data-media-item
+							data-name={image.name.toLowerCase()}
+							data-url={image.url.toLowerCase()}
+							data-size={String(image.size)}
+							data-modified={image.modifiedAt}
+						>
+							<div class="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 dark:bg-white/5">
+								<img src={image.url} alt={image.name} class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+								<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+									<button type="button" class="btn-regular scale-90 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-transform group-hover:scale-100" data-copy-value={image.url}>复制路径</button>
+								</div>
+							</div>
+							<div class="min-w-0 flex-1 px-1">
+								<div class="truncate text-xs font-bold text-black/80 dark:text-white/80" title={image.name}>{image.name}</div>
+								<div class="mt-2 flex items-center justify-between">
+									<div class="text-[10px] font-medium text-black/30 dark:text-white/30">{Math.max(1, Math.round(image.size / 1024))} KB</div>
+									<div class="flex gap-2">
+										<button type="button" class="text-[10px] font-black uppercase tracking-widest text-[var(--primary)]/60 hover:text-[var(--primary)]" data-rename-value={image.name}>重命名</button>
+										<button type="button" class="text-[10px] font-black uppercase tracking-widest text-rose-500/60 hover:text-rose-500" data-delete-value={image.url}>删除</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			) : (
+				<div class="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-black/5 py-24 dark:border-white/5" data-media-standalone-empty>
+					<div class="mb-4 text-black/10 dark:text-white/5">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+					</div>
+					<div class="text-sm font-bold text-black/20 dark:text-white/20">还没有任何素材</div>
+				</div>
+			)}
+			
+			<div class="hidden py-20 text-center text-sm font-bold text-black/20 dark:text-white/20" data-media-standalone-empty>
+				未发现匹配的素材。
+			</div>
+		</section>
+	</div>
+
+	<script is:inline>
+		const manager = document.querySelector("[data-standalone-media-manager]");
+		if (manager) {
+			const searchInput = manager.querySelector("[data-media-standalone-search]");
+			const sortSelect = manager.querySelector("[data-media-standalone-sort]");
+			const grid = manager.querySelector("[data-media-standalone-grid]");
+			const toast = manager.querySelector("[data-media-standalone-toast]");
+			const emptyStates = Array.from(manager.querySelectorAll("[data-media-standalone-empty]"));
+			const count = manager.querySelector("[data-media-standalone-count]");
+			const items = Array.from(manager.querySelectorAll("[data-media-item]"));
+
+			const showToast = (message, tone = "success") => {
+				if (!(toast instanceof HTMLElement)) return;
+				toast.innerHTML = `<div class="flex items-center gap-3 rounded-2xl border px-6 py-4 shadow-2xl backdrop-blur-xl ${
+					tone === "success" 
+						? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" 
+						: "border-amber-500/20 bg-amber-500/10 text-amber-300"
+				}">${message}</div>`;
+				toast.classList.remove("hidden");
+				window.setTimeout(() => toast.classList.add("hidden"), 2500);
+			};
+
+			const applyFilters = () => {
+				if (!(searchInput instanceof HTMLInputElement) || !(sortSelect instanceof HTMLSelectElement)) return;
+				const keyword = searchInput.value.trim().toLowerCase();
+				const sort = sortSelect.value;
+				const visibleItems = items.filter((item) => {
+					const haystack = `${item.getAttribute("data-name") || ""} ${item.getAttribute("data-url") || ""}`;
+					return !keyword || haystack.includes(keyword);
+				});
+
+				visibleItems.sort((a, b) => {
+					const nameA = a.getAttribute("data-name") || "";
+					const nameB = b.getAttribute("data-name") || "";
+					const sizeA = Number(a.getAttribute("data-size") || "0");
+					const sizeB = Number(b.getAttribute("data-size") || "0");
+					const modifiedA = a.getAttribute("data-modified") || "";
+					const modifiedB = b.getAttribute("data-modified") || "";
+					if (sort === "oldest") return modifiedA.localeCompare(modifiedB);
+					if (sort === "name-asc") return nameA.localeCompare(nameB, "zh-CN");
+					if (sort === "name-desc") return nameB.localeCompare(nameA, "zh-CN");
+					if (sort === "size-desc") return sizeB - sizeA;
+					if (sort === "size-asc") return sizeA - sizeB;
+					return modifiedB.localeCompare(modifiedA);
+				});
+
+				items.forEach((item) => item.classList.add("hidden"));
+				visibleItems.forEach((item) => {
+					item.classList.remove("hidden");
+					grid?.append(item);
+				});
+
+				if (count instanceof HTMLElement) count.textContent = String(visibleItems.length);
+				emptyStates.forEach((empty) => empty.classList.toggle("hidden", visibleItems.length > 0));
+			};
+
+			searchInput?.addEventListener("input", applyFilters);
+			sortSelect?.addEventListener("change", applyFilters);
+
+			manager.addEventListener("click", async (event) => {
+				const target = event.target;
+				if (!(target instanceof HTMLElement)) return;
+
+				const copyButton = target.closest("[data-copy-value]");
+				if (copyButton instanceof HTMLElement) {
+					const value = copyButton.getAttribute("data-copy-value") || "";
+					if (value) {
+						await navigator.clipboard.writeText(value);
+						showToast("路径已成功复制到剪贴板！");
+					}
+					return;
+				}
+
+				const deleteButton = target.closest("[data-delete-value]");
+				if (deleteButton instanceof HTMLElement) {
+					const value = deleteButton.getAttribute("data-delete-value") || "";
+					if (!value || !confirm(`确认删除 ${value} 吗？`)) return;
+
+					const response = await fetch("/admin/api/media/", {
+						method: "DELETE",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ file: value }),
+					});
+
+					if (response.ok) {
+						deleteButton.closest("[data-media-item]")?.remove();
+						showToast("素材已删除。");
+						applyFilters();
+					} else {
+						showToast("删除失败，请稍后重试。", "warning");
+					}
+					return;
+				}
+
+				const renameButton = target.closest("[data-rename-value]");
+				if (renameButton instanceof HTMLElement) {
+					const oldName = renameButton.getAttribute("data-rename-value") || "";
+					const newName = prompt("请输入新的文件名：", oldName);
+					if (!newName || newName === oldName) return;
+
+					const response = await fetch("/admin/api/media/", {
+						method: "PUT",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ oldName, newName }),
+					});
+
+					if (response.ok) {
+						showToast("重命名成功，请刷新页面查看变更。");
+						setTimeout(() => window.location.reload(), 1000);
+					} else {
+						const err = await response.json();
+						showToast(err.error || "重命名失败", "warning");
+					}
+				}
+			});
+
+			applyFilters();
+		}
+	</script>
+</AdminLayout>

@@ -1,0 +1,11 @@
+---
+interface Props {
+	class?: string;
+	html: string;
+}
+
+const { html } = Astro.props;
+const className = Astro.props.class;
+---
+
+<div data-pagefind-body class={`prose dark:prose-invert prose-base !max-w-none custom-md ${className}`} set:html={html}></div>

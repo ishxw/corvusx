@@ -1,0 +1,234 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import matter from "gray-matter";
+import { getAdminPostStatus } from "./admin-post-status";
+import type { AdminPost, PublicPostSummary } from "@/types/admin";
+import { POSTS_DIR } from "./paths";
+
+type Frontmatter = {
+	title: string | Date;
+	published: string | Date;
+	publishAt?: string | Date;
+	updated?: string | Date;
+	description?: string;
+	image?: string;
+	tags?: string[];
+	category?: string;
+	draft?: boolean;
+	lang?: string;
+};
+
+async function ensureDir(dir: string) {
+	await fs.mkdir(dir, { recursive: true });
+}
+
+function normalizeFrontmatterDate(value: string | Date | undefined): string | undefined {
+	if (!value) return undefined;
+	if (value instanceof Date) {
+		if (Number.isNaN(value.getTime())) return undefined;
+		return value.toISOString().slice(0, 10);
+	}
+
+	const trimmed = value.trim();
+	if (!trimmed) return undefined;
+
+	const parsed = new Date(trimmed);
+	if (!Number.isNaN(parsed.getTime()) && /^\d{4}-\d{2}-\d{2}/.test(trimmed) === false) {
+		return parsed.toISOString().slice(0, 10);
+	}
+
+	return trimmed;
+}
+
+function normalizeDateTime(value: string | Date | undefined): string | undefined {
+	if (!value) return undefined;
+	if (value instanceof Date) {
+		if (Number.isNaN(value.getTime())) return undefined;
+		return value.toISOString().slice(0, 16);
+	}
+
+	const trimmed = value.trim();
+	if (!trimmed) return undefined;
+
+	const parsed = new Date(trimmed);
+	if (!Number.isNaN(parsed.getTime()) && !trimmed.includes("T")) {
+		return parsed.toISOString().slice(0, 16);
+	}
+
+	return trimmed;
+}
+
+async function walkMarkdownFiles(dir: string): Promise<string[]> {
+	try {
+		const entries = await fs.readdir(dir, { withFileTypes: true });
+		const nested = await Promise.all(
+			entries.map(async (entry) => {
+				const fullPath = path.join(dir, entry.name);
+				if (entry.isDirectory()) {
+					return walkMarkdownFiles(fullPath);
+				}
+				return /\.(md|mdx)$/i.test(entry.name) ? [fullPath] : [];
+			}),
+		);
+		return nested.flat();
+	} catch {
+		return [];
+	}
+}
+
+function toSlug(filePath: string): string {
+	const relativePath = path.relative(POSTS_DIR, filePath).replace(/\\/g, "/");
+	if (relativePath.endsWith("/index.md")) {
+		return relativePath.slice(0, -"/index.md".length);
+	}
+	if (relativePath.endsWith(".md")) {
+		return relativePath.slice(0, -".md".length);
+	}
+	if (relativePath.endsWith(".mdx")) {
+		return relativePath.slice(0, -".mdx".length);
+	}
+	return relativePath;
+}
+
+function fromSlug(slug: string): string {
+	if (!slug || slug === "/") {
+		return path.join(POSTS_DIR, "index.md");
+	}
+	const normalized = slug.replace(/^\/|\/$/g, "");
+	if (normalized.includes("/")) {
+		return path.join(POSTS_DIR, normalized, "index.md");
+	}
+	return path.join(POSTS_DIR, `${normalized}.md`);
+}
+
+function parseFrontmatter(filePath: string, raw: string): AdminPost {
+	const parsed = matter(raw);
+	const data = parsed.data as Frontmatter;
+	return {
+		slug: toSlug(filePath),
+		sourcePath: path.relative(POSTS_DIR, filePath).replace(/\\/g, "/"),
+		title:
+			data.title instanceof Date
+				? data.title.toISOString()
+				: String(data.title ?? ""),
+		published:
+			normalizeFrontmatterDate(data.published) ??
+			new Date().toISOString().slice(0, 10),
+		publishAt: normalizeDateTime(data.publishAt),
+		updated: normalizeFrontmatterDate(data.updated),
+		description: data.description ?? "",
+		image: data.image ?? "",
+		tags: data.tags ?? [],
+		category: data.category ?? "",
+		draft: data.draft ?? false,
+		lang: data.lang ?? "",
+		body: parsed.content.trim(),
+	};
+}
+
+function yamlQuote(value: string): string {
+	return JSON.stringify(value ?? "");
+}
+
+function serializePost(post: AdminPost): string {
+	const frontmatter = [
+		"---",
+		`title: ${yamlQuote(post.title)}`,
+		`published: ${post.published}`,
+		post.publishAt ? `publishAt: ${post.publishAt}` : null,
+		post.updated ? `updated: ${post.updated}` : null,
+		`description: ${yamlQuote(post.description)}`,
+		`image: ${yamlQuote(post.image)}`,
+		`tags: [${post.tags.map((tag) => yamlQuote(tag)).join(", ")}]`,
+		`category: ${yamlQuote(post.category)}`,
+		`draft: ${post.draft ? "true" : "false"}`,
+		`lang: ${yamlQuote(post.lang)}`,
+		"---",
+		"",
+		post.body.trim(),
+		"",
+	]
+		.filter((line) => line !== null)
+		.join("\n");
+
+	return `${frontmatter}\n`;
+}
+
+export async function listAdminPosts(): Promise<AdminPost[]> {
+	await ensureDir(POSTS_DIR);
+	const files = await walkMarkdownFiles(POSTS_DIR);
+	const posts = await Promise.all(
+		files.map(async (filePath) => {
+			const raw = await fs.readFile(filePath, "utf8");
+			return parseFrontmatter(filePath, raw);
+		}),
+	);
+	return posts.sort((a, b) => (a.published < b.published ? 1 : -1));
+}
+
+export async function getAdminPost(slug: string): Promise<AdminPost | null> {
+	const targetPath = fromSlug(slug);
+	try {
+		const raw = await fs.readFile(targetPath, "utf8");
+		return parseFrontmatter(targetPath, raw);
+	} catch {
+		return null;
+	}
+}
+
+export async function saveAdminPost(post: AdminPost): Promise<void> {
+	const targetPath = fromSlug(post.slug);
+	await ensureDir(path.dirname(targetPath));
+	await fs.writeFile(targetPath, serializePost(post), "utf8");
+}
+
+export async function moveAdminPostSlug(
+	previousSlug: string,
+	nextSlug: string,
+): Promise<void> {
+	if (!previousSlug || previousSlug === nextSlug) return;
+
+	const oldPath = fromSlug(previousSlug);
+	const nextPath = fromSlug(nextSlug);
+
+	try {
+		await ensureDir(path.dirname(nextPath));
+		try {
+			await fs.access(nextPath);
+			await fs.rm(oldPath, { force: true });
+			return;
+		} catch {
+			// fall through to rename when the next path does not exist yet
+		}
+		await fs.rename(oldPath, nextPath);
+	} catch {
+		// no-op if old file does not exist yet
+	}
+}
+
+export async function deleteAdminPost(slug: string): Promise<void> {
+	const targetPath = fromSlug(slug);
+	await fs.rm(targetPath, { force: true });
+}
+
+export async function listPublicPosts(includeDrafts = false): Promise<PublicPostSummary[]> {
+	const posts = await listAdminPosts();
+	return posts
+		.filter((post) => includeDrafts || getAdminPostStatus(post).status === "published")
+		.map((post) => ({
+			slug: post.slug,
+			sourcePath: post.sourcePath,
+			title: post.title,
+			published: new Date(post.published),
+			publishAt: post.publishAt ? new Date(post.publishAt) : undefined,
+			updated: post.updated ? new Date(post.updated) : undefined,
+			description: post.description,
+			image: post.image,
+			tags: post.tags,
+			category: post.category || null,
+			draft: post.draft,
+			lang: post.lang,
+			body: post.body,
+		}))
+		.sort((a, b) => (a.published < b.published ? 1 : -1));
+}

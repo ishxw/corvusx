@@ -1,0 +1,119 @@
+---
+const modalId = Astro.props.modalId || "admin-media-picker";
+---
+
+<div
+	id={modalId}
+	class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 px-4 py-8 backdrop-blur-md transition-opacity duration-300"
+	data-media-picker-modal
+>
+	<div class="flex h-full max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-[var(--card-bg)] shadow-[0_32px_128px_-32px_rgba(0,0,0,0.5)]">
+		<!-- Modal Header -->
+		<header class="flex items-center justify-between border-b border-black/5 px-8 py-6 dark:border-white/5">
+			<div>
+				<div class="text-[10px] font-black uppercase tracking-[0.25em] text-black/30 dark:text-white/30">Asset Selection</div>
+				<h2 class="mt-1 text-2xl font-black tracking-tight text-black/90 dark:text-white/95" data-media-picker-title>选择素材</h2>
+			</div>
+			<button
+				type="button"
+				class="btn-plain rounded-2xl px-5 py-2.5 text-xs font-bold uppercase tracking-widest transition-all hover:bg-rose-500 hover:text-white"
+				data-close-media-picker
+			>
+				关闭
+			</button>
+		</header>
+
+		<!-- Modal Body -->
+		<div class="grid flex-1 overflow-hidden lg:grid-cols-[320px_1fr]">
+			<!-- Sidebar: Upload -->
+			<aside class="overflow-y-auto border-r border-black/5 bg-black/[0.01] p-8 dark:border-white/5 dark:bg-white/[0.01]">
+				<form
+					class="space-y-6"
+					data-media-upload-form
+				>
+					<div class="text-xs font-black uppercase tracking-widest text-black/40 dark:text-white/40">上传新素材</div>
+					<label class="group block cursor-pointer">
+						<div class="relative flex min-h-[140px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-black/5 bg-black/[0.03] transition-colors group-hover:border-[var(--primary)]/30 group-hover:bg-black/[0.05] dark:border-white/5 dark:bg-white/[0.03]">
+							<svg xmlns="http://www.w3.org/2000/svg" class="mb-3 h-8 w-8 text-black/20 dark:text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+							<div class="text-[10px] font-black uppercase tracking-wider text-black/30 dark:text-white/30">点击选择文件</div>
+							<input
+								type="file"
+								name="file"
+								accept="image/*"
+								required
+								data-media-upload-input
+								class="absolute inset-0 opacity-0 cursor-pointer"
+							/>
+						</div>
+					</label>
+					<button
+						type="submit"
+						class="btn-regular w-full rounded-2xl py-4 text-xs font-black uppercase tracking-widest shadow-lg"
+						data-media-upload-submit
+					>
+						上传并刷新
+					</button>
+				</form>
+
+				<div class="mt-10 space-y-4 rounded-3xl bg-[var(--primary)]/5 p-6 dark:bg-[var(--primary)]/10">
+					<div class="text-[10px] font-black uppercase tracking-widest text-[var(--primary)]">使用说明</div>
+					<p class="text-xs leading-relaxed text-black/50 dark:text-white/50">
+						点击“使用”将自动填充当前字段并同步预览。路径将以相对于网站根目录的形式保存。
+					</p>
+				</div>
+			</aside>
+
+			<!-- Main: Gallery -->
+			<main class="flex flex-col overflow-hidden p-8">
+				<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div class="text-xs font-black uppercase tracking-widest text-black/40 dark:text-white/40">
+						已上传素材 <span class="text-[var(--primary)]" data-media-count>0</span>
+					</div>
+					<div class="flex flex-wrap items-center gap-3">
+						<div class="relative">
+							<svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-black/20 dark:text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+							<input
+								type="search"
+								placeholder="搜索素材..."
+								data-media-search
+								class="!py-2 !pl-10 !text-xs sm:w-60"
+							/>
+						</div>
+						<select data-media-sort class="!py-2 !text-xs sm:w-40">
+							<option value="newest">最新上传</option>
+							<option value="oldest">最早上传</option>
+							<option value="name-asc">A-Z</option>
+							<option value="name-desc">Z-A</option>
+						</select>
+					</div>
+				</div>
+
+				<div data-media-status class="mb-4 text-center text-xs font-bold text-black/20 dark:text-white/20">正在同步库...</div>
+				<div data-media-toast class="fixed bottom-12 left-1/2 z-[110] -translate-x-1/2 hidden"></div>
+
+				<div
+					class="hidden flex-1 flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-black/5 py-20 dark:border-white/5"
+					data-media-empty
+				>
+					<div class="text-sm font-bold text-black/20 dark:text-white/20">素材库空空如也</div>
+				</div>
+
+				<div
+					class="grid flex-1 gap-5 overflow-y-auto pr-2 scrollbar-thin sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+					data-media-grid
+				></div>
+			</main>
+		</div>
+	</div>
+</div>
+
+<script>
+	import "@/components/admin/MediaPickerEnhancer.client";
+</script>
+
+<script is:inline define:vars={{ modalId }}>
+	window.initAdminMediaPicker?.({
+		modalId,
+		endpoint: "/admin/api/media/",
+	});
+</script>

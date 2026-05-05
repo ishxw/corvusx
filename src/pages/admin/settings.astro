@@ -1,0 +1,407 @@
+---
+import MediaPickerModal from "@/components/admin/MediaPickerModal.astro";
+import AdminThemeHueControl from "@/components/admin/AdminThemeHueControl.svelte";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import { siteConfig } from "@/config";
+import { resolveAdminPreviewUrl } from "@/server/admin-preview";
+import { getSiteSettings } from "@/server/site-store";
+
+if (!Astro.locals.adminUser) {
+	return Astro.redirect("/admin/login/");
+}
+
+const settings = await getSiteSettings();
+const success = Astro.url.searchParams.get("success");
+const error = Astro.url.searchParams.get("error");
+const profileAvatarPreview = await resolveAdminPreviewUrl(settings.profileAvatar);
+const bannerPreview = await resolveAdminPreviewUrl(settings.bannerSrc);
+const defaultThemeHue = siteConfig.themeColor.hue;
+---
+
+<AdminLayout
+	title="站点设置"
+	description="在这里统一修改博客标题、视觉资源、社交链接、导航链接、功能模块和 About 内容。所有修改都会保存到 `data/site-settings.json` 并立即参与前台运行时配置。"
+	success={success ? "站点设置已保存。" : null}
+	error={
+		error === "invalid-links"
+			? "链接配置无法解析，请检查社交链接和导航链接。"
+			: error === "save-failed"
+				? "保存失败，请稍后重试。"
+				: error
+					? "站点设置没有保存成功。"
+					: null
+	}
+>
+	<form method="post" action="/admin/api/settings/" class="space-y-10 pb-20" data-admin-settings-form>
+		<input
+			id="profileLinksJson"
+			type="hidden"
+			name="profileLinksJson"
+			value={JSON.stringify(settings.profileLinks)}
+		/>
+		<input
+			id="navLinksJson"
+			type="hidden"
+			name="navLinksJson"
+			value={JSON.stringify(settings.navLinks)}
+		/>
+
+		<!-- Quick Jump Navigation -->
+		<div class="sticky top-6 z-20 mb-10">
+			<div class="card-base flex flex-wrap items-center gap-2 p-2 shadow-xl backdrop-blur-md dark:bg-black/40">
+				{[
+					{ id: "basics", label: "基础信息" },
+					{ id: "brand", label: "个人资料" },
+					{ id: "social", label: "社交链接" },
+					{ id: "nav", label: "导航链接" },
+					{ id: "features", label: "功能模块" },
+					{ id: "about", label: "About 内容" },
+				].map(sec => (
+					<a href={`#section-${sec.id}`} class="btn-plain rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all hover:bg-[var(--primary)] hover:text-white">
+						{sec.label}
+					</a>
+				))}
+			</div>
+		</div>
+
+		<!-- Section: Basics -->
+		<section id="section-basics" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">基础信息</h2>
+				<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">影响站点的核心身份、语言和整体视觉基调。</p>
+			</div>
+			<div class="grid gap-8 md:grid-cols-2">
+				<div class="space-y-6">
+					<label class="block">
+						<div class="admin-label">站点标题</div>
+						<input name="title" value={settings.title} placeholder="输入博客名称" />
+					</label>
+					<label class="block">
+						<div class="admin-label">副标题</div>
+						<input name="subtitle" value={settings.subtitle} placeholder="一句简单的描述" />
+					</label>
+					<label class="block">
+						<div class="admin-label">站点语言</div>
+						<input name="lang" value={settings.lang} placeholder="zh_CN" />
+					</label>
+				</div>
+				<div class="space-y-6">
+					<div class="block">
+						<AdminThemeHueControl
+							client:load
+							initialHue={settings.themeHue}
+							defaultHue={defaultThemeHue}
+							name="themeHue"
+						/>
+					</div>
+					<div class="rounded-3xl bg-black/[0.03] p-6 dark:bg-white/[0.03]">
+						<label class="flex items-center gap-4 cursor-pointer">
+							<input type="checkbox" name="themeFixed" checked={settings.themeFixed} class="h-5 w-5 rounded-lg accent-[var(--primary)]" />
+							<div class="space-y-1">
+								<div class="text-sm font-bold text-black/80 dark:text-white/80">固定主题色</div>
+								<div class="text-xs text-black/40 dark:text-white/40">启用后，访客将无法在前台动态切换主题颜色。</div>
+							</div>
+						</label>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Section: Profile & Brand -->
+		<section id="section-brand" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">个人资料</h2>
+				<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">个性化头像、横幅和个人简介，打造独特的个人主页。</p>
+			</div>
+			
+			<div class="grid gap-10 lg:grid-cols-2">
+				<!-- Avatar Part -->
+				<div class="space-y-6">
+					<label class="block">
+						<div class="admin-label">站点头像</div>
+						<div class="flex gap-3">
+							<input id="profileAvatar" name="profileAvatar" value={settings.profileAvatar} data-media-input class="flex-1" />
+							<button type="button" data-open-media-picker data-target-input="profileAvatar" data-picker-label="选择站点头像" class="btn-plain shrink-0 rounded-2xl px-5 font-bold text-sm">选择</button>
+						</div>
+					</label>
+					<div class="flex justify-center rounded-[2.5rem] border-2 border-dashed border-black/5 bg-black/[0.02] p-8 dark:border-white/5 dark:bg-white/[0.02]">
+						<img
+							data-media-preview-for="profileAvatar"
+							alt="头像预览"
+							class:list={["h-32 w-32 rounded-[2.5rem] object-cover shadow-2xl transition-transform hover:scale-105", !profileAvatarPreview.isResolvable && "hidden"]}
+							src={profileAvatarPreview.isResolvable ? profileAvatarPreview.value : undefined}
+						/>
+						<div data-media-preview-empty="profileAvatar" class:list={["flex h-32 w-32 items-center justify-center rounded-[2.5rem] bg-black/5 text-center text-[10px] font-bold uppercase tracking-widest text-black/20 dark:bg-white/5 dark:text-white/20", profileAvatarPreview.isResolvable && "hidden"]}>
+							No Image
+						</div>
+					</div>
+					<label class="block">
+						<div class="admin-label">显示名称</div>
+						<input name="profileName" value={settings.profileName} placeholder="你的名字" />
+					</label>
+				</div>
+
+				<!-- Banner Part -->
+				<div class="space-y-6">
+					<label class="block">
+						<div class="admin-label">背景横幅</div>
+						<div class="flex gap-3">
+							<input id="bannerSrc" name="bannerSrc" value={settings.bannerSrc} data-media-input class="flex-1" />
+							<button type="button" data-open-media-picker data-target-input="bannerSrc" data-picker-label="选择站点背景图" class="btn-plain shrink-0 rounded-2xl px-5 font-bold text-sm">选择</button>
+						</div>
+					</label>
+					<div class="rounded-3xl border-2 border-dashed border-black/5 bg-black/[0.02] p-4 dark:border-white/5 dark:bg-white/[0.02]">
+						<img
+							data-media-preview-for="bannerSrc"
+							alt="背景图预览"
+							class:list={["aspect-[21/9] w-full rounded-2xl object-cover shadow-lg", !bannerPreview.isResolvable && "hidden"]}
+							src={bannerPreview.isResolvable ? bannerPreview.value : undefined}
+						/>
+						<div data-media-preview-empty="bannerSrc" class:list={["flex aspect-[21/9] w-full items-center justify-center rounded-2xl bg-black/5 text-[10px] font-bold uppercase tracking-widest text-black/20 dark:bg-white/5 dark:text-white/20", bannerPreview.isResolvable && "hidden"]}>
+							No Banner
+						</div>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<label class="block">
+							<div class="admin-label">显示模式</div>
+							<select name="bannerPosition" class="w-full">
+								<option value="top" selected={settings.bannerPosition === "top"}>顶部 (Top)</option>
+								<option value="center" selected={settings.bannerPosition === "center"}>居中 (Center)</option>
+								<option value="full" selected={settings.bannerPosition === "full"}>拉伸铺满 (Full Page)</option>
+							</select>
+						</label>
+						<div class="flex items-end pb-3">
+							<label class="flex items-center gap-3 cursor-pointer">
+								<input type="checkbox" name="bannerEnabled" checked={settings.bannerEnabled} class="h-5 w-5 rounded-lg accent-[var(--primary)]" />
+								<span class="text-xs font-black uppercase tracking-wider text-black/60 dark:text-white/60">启用横幅</span>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="mt-10 space-y-8">
+				<label class="block">
+					<div class="admin-label">个人简介 (Bio)</div>
+					<textarea name="profileBio" rows="3" placeholder="写点什么介绍你自己..." class="w-full">{settings.profileBio}</textarea>
+				</label>
+				<label class="block">
+					<div class="admin-label">Favicon 路径</div>
+					<input name="faviconSrc" value={settings.faviconSrc} placeholder="/favicon.svg" class="w-full" />
+				</label>
+			</div>
+		</section>
+
+		<!-- Section: Social Links -->
+		<section id="section-social" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10 flex items-start justify-between">
+				<div>
+					<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">社交链接</h2>
+					<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">
+						配置首页侧边栏显示的社交平台入口。
+					</p>
+				</div>
+				<button type="button" data-add-profile-link class="btn-regular rounded-2xl px-5 py-3 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">添加项目</button>
+			</div>
+			
+			<div id="profile-links-container" class="grid gap-4 sm:grid-cols-1">
+				{settings.profileLinks.map((item) => (
+					<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
+						<div class="grid gap-6 xl:grid-cols-[1fr_2.5fr_1.2fr_auto] xl:items-end">
+							<label class="block">
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">名称</div>
+								<input data-field="name" value={item.name} placeholder="GitHub" class="!py-2.5 !text-sm" />
+							</label>
+							<label class="block">
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">链接 URL</div>
+								<input data-field="url" value={item.url} placeholder="https://github.com/..." class="!py-2.5 !text-sm" />
+							</label>
+							<label class="block">
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">图标 ID</div>
+								<input data-field="icon" value={item.icon} placeholder="fa6-brands:github" class="!py-2.5 !text-sm font-mono" />
+							</label>
+							<button type="button" data-remove-row class="h-11 rounded-2xl bg-rose-500/10 px-5 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500 hover:text-white">删除</button>
+						</div>
+					</div>
+				))}
+			</div>
+			<div data-profile-empty class:list={["mt-4 flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-black/5 py-12 dark:border-white/5", settings.profileLinks.length > 0 && "hidden"]}>
+				<div class="text-sm font-bold text-black/30 dark:text-white/30">尚未添加任何社交链接</div>
+			</div>
+		</section>
+
+		<!-- Section: Navigation Links -->
+		<section id="section-nav" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10 flex items-start justify-between">
+				<div>
+					<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">导航链接</h2>
+					<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">
+						自定义顶部导航栏。
+					</p>
+				</div>
+				<button type="button" data-add-nav-link class="btn-regular rounded-2xl px-5 py-3 text-xs font-bold uppercase tracking-widest">添加菜单</button>
+			</div>
+			
+			<div id="nav-links-container" class="grid gap-4 sm:grid-cols-1">
+				{settings.navLinks.map((item) => (
+					<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
+						<div class="grid gap-6 xl:grid-cols-[1fr_2.5fr_1.2fr_auto_auto] xl:items-end">
+							<label class="block">
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">显示文字</div>
+								<input data-field="name" value={item.name} placeholder="关于" class="!py-2.5 !text-sm" />
+							</label>
+							<label class="block">
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">目标路径 / URL</div>
+								<input data-field="url" value={item.url} placeholder="/about/" class="!py-2.5 !text-sm" />
+							</label>
+							<label class="block">
+								<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">图标 ID (可选)</div>
+								<input data-field="icon" value={item.icon || ""} placeholder="fa6-solid:user" class="!py-2.5 !text-sm font-mono" />
+							</label>
+							<label class="flex h-11 items-center gap-3 rounded-2xl border border-black/5 bg-white px-4 transition-colors hover:border-[var(--primary)] dark:border-white/5 dark:bg-black/20">
+								<input type="checkbox" data-field="external" checked={Boolean(item.external)} class="h-4 w-4 accent-[var(--primary)]" />
+								<span class="text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/40">新窗口</span>
+							</label>
+							<button type="button" data-remove-row class="h-11 rounded-2xl bg-rose-500/10 px-5 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500 hover:text-white">删除</button>
+						</div>
+					</div>
+				))}
+			</div>
+			<div data-nav-empty class:list={["mt-4 flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-black/5 py-12 dark:border-white/5", settings.navLinks.length > 0 && "hidden"]}>
+				<div class="text-sm font-bold text-black/30 dark:text-white/30">使用默认导航配置</div>
+			</div>
+		</section>
+
+		<!-- Section: Features -->
+		<section id="section-features" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">功能模块</h2>
+				<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">精细化控制全站交互与版权显示行为。</p>
+			</div>
+			<div class="grid gap-10 md:grid-cols-2">
+				<div class="space-y-8">
+					<label class="block">
+						<div class="admin-label">目录 (TOC) 深度</div>
+						<select name="tocDepth" class="w-full">
+							<option value="1" selected={settings.tocDepth === 1}>仅一级标题</option>
+							<option value="2" selected={settings.tocDepth === 2}>显示到二级标题</option>
+							<option value="3" selected={settings.tocDepth === 3}>显示到三级标题</option>
+						</select>
+					</label>
+					<div class="grid grid-cols-2 gap-4">
+						<label class="group flex cursor-pointer flex-col gap-3 rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-all hover:bg-white dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-black/40">
+							<input type="checkbox" name="tocEnabled" checked={settings.tocEnabled} class="h-6 w-6 accent-[var(--primary)]" />
+							<div class="text-xs font-black uppercase tracking-widest text-black/60 group-hover:text-[var(--primary)] dark:text-white/60">启用目录</div>
+						</label>
+						<label class="group flex cursor-pointer flex-col gap-3 rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-all hover:bg-white dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-black/40">
+							<input type="checkbox" name="licenseEnabled" checked={settings.licenseEnabled} class="h-6 w-6 accent-[var(--primary)]" />
+							<div class="text-xs font-black uppercase tracking-widest text-black/60 group-hover:text-[var(--primary)] dark:text-white/60">版权信息</div>
+						</label>
+					</div>
+				</div>
+				<div class="space-y-6">
+					<label class="block">
+						<div class="admin-label">版权协议名称</div>
+						<input name="licenseName" value={settings.licenseName} placeholder="CC BY-NC-SA 4.0" />
+					</label>
+					<label class="block">
+						<div class="admin-label">版权协议 URL</div>
+						<input name="licenseUrl" value={settings.licenseUrl} placeholder="https://creativecommons.org/..." />
+					</label>
+				</div>
+			</div>
+		</section>
+
+		<!-- Section: About Markdown -->
+		<section id="section-about" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-8">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">About 页面内容</h2>
+				<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">支持标准 Markdown 语法，用于构建你的个人“关于”页面。</p>
+			</div>
+			<div class="relative overflow-hidden rounded-[2rem] border border-black/5 bg-black/[0.01] dark:border-white/5 dark:bg-white/[0.01]">
+				<textarea
+					name="aboutMarkdown"
+					rows="15"
+					class="w-full !border-none !bg-transparent !p-8 font-mono !text-sm leading-relaxed"
+					placeholder="在此输入 Markdown 内容..."
+				>{settings.aboutMarkdown}</textarea>
+			</div>
+		</section>
+
+		<!-- Floating Save Bar -->
+		<div class="fixed bottom-10 left-1/2 z-50 w-full max-w-7xl -translate-x-1/2 px-6">
+			<div class="flex items-center justify-between rounded-[2.5rem] border border-white/10 bg-black/80 p-3 pl-8 shadow-2xl backdrop-blur-xl dark:bg-white/10">
+				<div class="hidden text-xs font-black uppercase tracking-[0.2em] text-white/40 md:block">
+					检测到未保存的更改
+				</div>
+				<button type="submit" class="btn-regular group flex items-center gap-3 rounded-[2rem] px-8 py-4 font-black tracking-wide shadow-2xl transition-all hover:scale-105 active:scale-95">
+					<span>保存站点设置</span>
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+				</button>
+			</div>
+		</div>
+	</form>
+
+	<!-- Template for Repeater Rows -->
+	<template id="profile-link-template">
+		<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-5 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
+			<div class="grid gap-5 xl:grid-cols-[1fr_2fr_1.2fr_auto] xl:items-end">
+				<label class="block">
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">名称</div>
+					<input data-field="name" placeholder="项目名称" class="!py-2.5 !text-sm" />
+				</label>
+				<label class="block">
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">链接 URL</div>
+					<input data-field="url" placeholder="https://..." class="!py-2.5 !text-sm" />
+				</label>
+				<label class="block">
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">图标 ID</div>
+					<input data-field="icon" placeholder="fa6-brands:..." class="!py-2.5 !text-sm font-mono" />
+				</label>
+				<button type="button" data-remove-row class="h-11 rounded-2xl bg-rose-500/10 px-5 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500 hover:text-white">删除</button>
+			</div>
+		</div>
+	</template>
+
+	<template id="nav-link-template">
+		<div class="group relative rounded-3xl border border-black/5 bg-black/[0.02] p-5 transition-all hover:bg-black/[0.04] dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]" data-repeater-row>
+			<div class="grid gap-5 xl:grid-cols-[1fr_2fr_1.2fr_auto_auto] xl:items-end">
+				<label class="block">
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">显示文字</div>
+					<input data-field="name" placeholder="菜单名" class="!py-2.5 !text-sm" />
+				</label>
+				<label class="block">
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">目标路径 / URL</div>
+					<input data-field="url" placeholder="/path/" class="!py-2.5 !text-sm" />
+				</label>
+				<label class="block">
+					<div class="mb-2 text-[10px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30">图标 ID (可选)</div>
+					<input data-field="icon" placeholder="fa6-solid:..." class="!py-2.5 !text-sm font-mono" />
+				</label>
+				<label class="flex h-11 items-center gap-3 rounded-2xl border border-black/5 bg-white px-4 transition-colors hover:border-[var(--primary)] dark:border-white/5 dark:bg-black/20">
+					<input type="checkbox" data-field="external" class="h-4 w-4 accent-[var(--primary)]" />
+					<span class="text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/40">新窗口</span>
+				</label>
+				<button type="button" data-remove-row class="h-11 rounded-2xl bg-rose-500/10 px-5 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500 hover:text-white">删除</button>
+			</div>
+		</div>
+	</template>
+
+	<script>
+		import "@/components/admin/SettingsEnhancer.client";
+	</script>
+
+	<script is:inline>
+		window.initAdminSettingsEnhancer?.({
+			form: document.querySelector("[data-admin-settings-form]"),
+			profileContainerId: "profile-links-container",
+			navContainerId: "nav-links-container",
+			profileTemplateId: "profile-link-template",
+			navTemplateId: "nav-link-template",
+			profileHiddenInputId: "profileLinksJson",
+			navHiddenInputId: "navLinksJson",
+		});
+	</script>
+
+	<MediaPickerModal modalId="admin-media-picker" />
+</AdminLayout>
