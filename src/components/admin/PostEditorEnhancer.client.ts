@@ -161,16 +161,28 @@ function initAdminPostEditor(options: EnhancerOptions) {
 			return;
 		}
 
-		showRestoreNotice("检测到本地未提交草稿，正在等待是否恢复。");
-
 		try {
 			const parsed = JSON.parse(saved) as Record<string, unknown>;
+			
+			// If the saved draft is essentially empty, just clear it and don't prompt
+			const isDraftEmpty = !String(parsed.body || "").trim() && !String(parsed.title || "").trim();
+			if (isDraftEmpty) {
+				localStorage.removeItem(options.autosaveKey);
+				hideRestoreNotice();
+				return;
+			}
+
+			showRestoreNotice("检测到本地未提交草稿，正在等待是否恢复。");
+
 			const shouldRestore =
 				!editor.value.trim() &&
 				(await window.showAdminConfirm?.("检测到未提交的本地草稿，是否恢复？"));
 
 			if (!shouldRestore) {
-				setStatus("已忽略本地草稿。", "warning");
+				// User explicitly chose not to restore, or editor is already dirty
+				// Clear the draft to prevent recurring prompts
+				localStorage.removeItem(options.autosaveKey);
+				setStatus("已忽略并清除本地草稿。", "warning");
 				hideRestoreNotice();
 				return;
 			}
@@ -193,6 +205,7 @@ function initAdminPostEditor(options: EnhancerOptions) {
 			setStatus("本地草稿已恢复。", "success");
 			updateDirtyState(true);
 		} catch {
+			localStorage.removeItem(options.autosaveKey);
 			hideRestoreNotice();
 		}
 	};
