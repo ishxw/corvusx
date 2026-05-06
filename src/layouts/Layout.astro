@@ -92,6 +92,23 @@ const bannerOffset =
 	  data-overlayscrollbars-initialize
 >
 	<head>
+		<style is:inline>
+			/* Nuclear Fix for Twikoo Flicker: Absolutely hide until fully loaded AND themed */
+			#tcomment:not(.twikoo-loaded) {
+				display: none !important;
+				opacity: 0 !important;
+				visibility: hidden !important;
+			}
+			#tcomment.twikoo-loaded {
+				display: block !important;
+				animation: twikoo-fade-in 0.5s ease forwards;
+			}
+			@keyframes twikoo-fade-in {
+				from { opacity: 0; transform: translateY(15px); }
+				to { opacity: 1; transform: translateY(0); }
+			}
+		</style>
+
 
 		<title>{pageTitle}</title>
 
@@ -157,20 +174,6 @@ const bannerOffset =
 			window.twikooEnvId = twikooEnvId;
 			window.twikooEnable = twikooEnable;
 		</script>
-		<style is:inline>
-			/* Nuclear Fix for Twikoo Flicker: Absolutely hide until fully loaded */
-			#tcomment:not(.twikoo-loaded) {
-				display: none !important;
-			}
-			#tcomment.twikoo-loaded {
-				display: block !important;
-				animation: twikoo-fade-in 0.4s ease forwards;
-			}
-			@keyframes twikoo-fade-in {
-				from { opacity: 0; transform: translateY(10px); }
-				to { opacity: 1; transform: translateY(0); }
-			}
-		</style>
 		<style define:vars={{
 			configHue,
 			'page-width': `${PAGE_WIDTH}rem`,
@@ -416,8 +419,10 @@ function initTwikoo() {
 	const el = document.getElementById('tcomment');
 	if (!el) return;
 	
-	// If already loading or loaded, don't re-init
-	if (el.dataset.twikooStatus === 'loading' || el.dataset.twikooStatus === 'loaded') return;
+	// Reset state if it's a new element or during SPA transition
+	if (el.dataset.twikooStatus === 'loaded' && el.classList.contains('twikoo-loaded')) {
+		return;
+	}
 
 	const path = el.dataset.twikooPath || window.location.pathname;
 	
@@ -428,19 +433,23 @@ function initTwikoo() {
 			el: '#tcomment',
 			path: path,
 			onCommentLoaded: function() {
-				el.classList.add('twikoo-loaded');
-				el.dataset.twikooStatus = 'loaded';
+				// Use requestAnimationFrame to ensure the browser has parsed the injected CSS
+				requestAnimationFrame(() => {
+					setTimeout(() => {
+						el.classList.add('twikoo-loaded');
+						el.dataset.twikooStatus = 'loaded';
+					}, 100); 
+				});
 			}
 		});
-		// Fallback for visual state
+		// Fallback for visual state (increase to 2s to be safe)
 		setTimeout(() => {
-			if (!el.classList.contains('twikoo-loaded')) {
+			if (el && !el.classList.contains('twikoo-loaded')) {
 				el.classList.add('twikoo-loaded');
 				el.dataset.twikooStatus = 'loaded';
 			}
-		}, 1500);
+		}, 2000);
 	} else {
-		// Library not ready yet, retry in 200ms
 		setTimeout(initTwikoo, 200);
 	}
 }
