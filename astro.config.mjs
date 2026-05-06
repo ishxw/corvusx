@@ -31,6 +31,9 @@ export default defineConfig({
 	output: "server",
 	base: "/",
 	trailingSlash: "always",
+	server: {
+		port: 3033,
+	},
 	security: {
 		checkOrigin: false,
 	},
