@@ -15,6 +15,20 @@ const { enable, envId } = config;
 {enable && (
     <>
         <div id="tcomment" class={className} data-twikoo-path={path}></div>
+        <style is:global>
+            /* Suppress Twikoo's large black avatar flicker during initial load */
+            #tcomment .tk-submit .tk-avatar.tk-has-avatar {
+                opacity: 0;
+            }
+            #tcomment .tk-comments-container .tk-avatar {
+                opacity: 0;
+            }
+            /* Show once loaded */
+            #tcomment.twikoo-loaded .tk-avatar {
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
+        </style>
         <script is:inline src="https://cdn.staticfile.org/twikoo/1.6.39/twikoo.all.min.js"></script>
         <script is:inline define:vars={{ envId }}>
             function initTwikoo() {
@@ -28,7 +42,12 @@ const { enable, envId } = config;
                         envId: envId,
                         el: '#tcomment',
                         path: path,
+                        onCommentLoaded: function() {
+                            el.classList.add('twikoo-loaded');
+                        }
                     });
+                    // Fallback in case onCommentLoaded is not triggered or supported in specific versions
+                    setTimeout(() => el.classList.add('twikoo-loaded'), 1000);
                 } else {
                     // If twikoo is not yet loaded, wait a bit and retry
                     setTimeout(initTwikoo, 100);
