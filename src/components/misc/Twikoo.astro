@@ -9,7 +9,7 @@ interface Props {
 }
 
 const { path, class: className, config } = Astro.props;
-const { enable, envId } = config;
+const { enable } = config;
 ---
 
 {enable && (
@@ -29,44 +29,5 @@ const { enable, envId } = config;
                 transition: opacity 0.3s ease;
             }
         </style>
-        <script is:inline src="https://cdn.staticfile.org/twikoo/1.6.39/twikoo.all.min.js"></script>
-        <script is:inline define:vars={{ envId }}>
-            function initTwikoo() {
-                const el = document.getElementById('tcomment');
-                if (!el) return;
-                
-                const path = el.dataset.twikooPath || window.location.pathname;
-                
-                if (typeof twikoo !== 'undefined') {
-                    twikoo.init({
-                        envId: envId,
-                        el: '#tcomment',
-                        path: path,
-                        onCommentLoaded: function() {
-                            el.classList.add('twikoo-loaded');
-                        }
-                    });
-                    // Fallback in case onCommentLoaded is not triggered or supported in specific versions
-                    setTimeout(() => el.classList.add('twikoo-loaded'), 1000);
-                } else {
-                    // If twikoo is not yet loaded, wait a bit and retry
-                    setTimeout(initTwikoo, 100);
-                }
-            }
-
-            // Initial load
-            initTwikoo();
-
-            // Swup support
-            if (window.swup) {
-                if (!window.swup.hooks.has('content:replace', initTwikoo)) {
-                    window.swup.hooks.on('content:replace', initTwikoo);
-                }
-            } else {
-                document.addEventListener('swup:enable', () => {
-                    window.swup.hooks.on('content:replace', initTwikoo);
-                });
-            }
-        </script>
     </>
 )}
