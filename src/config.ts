@@ -5,6 +5,7 @@ import type {
 	NavBarConfig,
 	ProfileConfig,
 	SiteConfig,
+	TwikooConfig,
 } from "./types/config";
 import { LinkPreset } from "./types/config";
 
@@ -63,6 +64,13 @@ export const licenseConfig: LicenseConfig = {
 		enable: false,
 		name: "CC BY-NC-SA 4.0",
 		url: "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+	}),
+};
+
+export const twikooConfig: TwikooConfig = {
+	...(runtimeConfig?.twikooConfig || {
+		enable: false,
+		envId: "",
 	}),
 };
 

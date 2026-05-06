@@ -86,11 +86,11 @@ export async function renderRuntimeMarkdown(markdown: string): Promise<{
 		.use(rehypeComponents as any, {
 			components: {
 				github: GithubCardComponent as any,
-				note: (props: any, children: any) => AdmonitionComponent(props, children, "note"),
-				tip: (props: any, children: any) => AdmonitionComponent(props, children, "tip"),
-				important: (props: any, children: any) => AdmonitionComponent(props, children, "important"),
-				caution: (props: any, children: any) => AdmonitionComponent(props, children, "caution"),
-				warning: (props: any, children: any) => AdmonitionComponent(props, children, "warning"),
+				note: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "note"),
+				tip: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "tip"),
+				important: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "important"),
+				caution: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "caution"),
+				warning: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "warning"),
 			},
 		} as any)
 		.use(rehypeExpressiveCode, {

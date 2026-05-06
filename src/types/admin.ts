@@ -6,7 +6,7 @@ export type AdminSiteSettings = {
 	themeFixed: boolean;
 	bannerEnabled: boolean;
 	bannerSrc: string;
-	bannerPosition: "top" | "center";
+	bannerPosition: "top" | "center" | "bottom";
 	tocEnabled: boolean;
 	tocDepth: 1 | 2 | 3;
 	faviconSrc: string;
@@ -24,6 +24,8 @@ export type AdminSiteSettings = {
 		icon?: string;
 		external?: boolean;
 	}[];
+	twikooEnabled: boolean;
+	twikooEnvId: string;
 	licenseEnabled: boolean;
 	licenseName: string;
 	licenseUrl: string;

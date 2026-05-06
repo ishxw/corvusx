@@ -58,6 +58,7 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 					{ id: "social", label: "社交链接" },
 					{ id: "nav", label: "导航链接" },
 					{ id: "features", label: "功能模块" },
+					{ id: "comments", label: "评论系统" },
 					{ id: "about", label: "About 内容" },
 				].map(sec => (
 					<a href={`#section-${sec.id}`} class="btn-plain rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all hover:bg-[var(--primary)] hover:text-white">
@@ -218,6 +219,7 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 							<select name="bannerPosition" class="w-full">
 								<option value="top" selected={settings.bannerPosition === "top"}>顶部 (Top)</option>
 								<option value="center" selected={settings.bannerPosition === "center"}>居中 (Center)</option>
+								<option value="bottom" selected={settings.bannerPosition === "bottom"}>底部 (Bottom)</option>
 							</select>
 						</label>
 						<div class="flex items-end pb-3">
@@ -353,6 +355,31 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 					<label class="block">
 						<div class="admin-label">版权协议 URL</div>
 						<input name="licenseUrl" value={settings.licenseUrl} placeholder="https://creativecommons.org/..." />
+					</label>
+				</div>
+			</div>
+		</section>
+
+		<!-- Section: Comments -->
+		<section id="section-comments" class="admin-scroll-anchor card-base p-8 md:p-10" data-admin-card>
+			<div class="mb-10">
+				<h2 class="text-2xl font-black tracking-tight text-black/90 dark:text-white/95">评论系统 (Twikoo)</h2>
+				<p class="mt-2 text-sm leading-relaxed text-black/50 dark:text-white/50">为你的文章开启 Twikoo 评论支持。</p>
+			</div>
+			<div class="grid gap-10 md:grid-cols-2">
+				<div class="space-y-8">
+					<label class="group flex cursor-pointer flex-col gap-3 rounded-3xl border border-black/5 bg-black/[0.02] p-6 transition-all hover:bg-white dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-black/40">
+						<input type="checkbox" name="twikooEnabled" checked={settings.twikooEnabled} class="h-6 w-6 accent-[var(--primary)]" />
+						<div class="text-xs font-black uppercase tracking-widest text-black/60 group-hover:text-[var(--primary)] dark:text-white/60">启用 Twikoo 评论</div>
+					</label>
+				</div>
+				<div class="space-y-6">
+					<label class="block">
+						<div class="admin-label">Twikoo 环境 ID (envId)</div>
+						<input name="twikooEnvId" value={settings.twikooEnvId} placeholder="https://your-twikoo.vercel.app" />
+						<p class="mt-2 text-[10px] leading-relaxed text-black/30 dark:text-white/30">
+							部署在 Vercel 或私有服务器后的环境地址。
+						</p>
 					</label>
 				</div>
 			</div>

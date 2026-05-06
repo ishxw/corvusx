@@ -8,17 +8,24 @@ async function ensureDir(dir: string) {
 	await fs.mkdir(dir, { recursive: true });
 }
 
+let cachedSettings: AdminSiteSettings | null = null;
+
 export async function getSiteSettings(): Promise<AdminSiteSettings> {
+	if (cachedSettings) return cachedSettings;
 	try {
 		const raw = await fs.readFile(SITE_SETTINGS_PATH, "utf8");
 		const parsed = JSON.parse(raw) as Partial<AdminSiteSettings>;
 		const bannerPosition =
-			parsed.bannerPosition === "center" ? "center" : "top";
+			parsed.bannerPosition === "center"
+				? "center"
+				: parsed.bannerPosition === "bottom"
+					? "bottom"
+					: "top";
 		const faviconSrc =
 			parsed.faviconSrc === "public/favicon/corvusx.svg"
 				? "/favicon/corvusx.svg"
 				: parsed.faviconSrc ?? defaultSiteSettings.faviconSrc;
-		return {
+		cachedSettings = {
 			...defaultSiteSettings,
 			...parsed,
 			bannerPosition,
@@ -26,6 +33,7 @@ export async function getSiteSettings(): Promise<AdminSiteSettings> {
 			profileLinks: parsed.profileLinks ?? defaultSiteSettings.profileLinks,
 			navLinks: parsed.navLinks ?? defaultSiteSettings.navLinks,
 		};
+		return cachedSettings;
 	} catch {
 		return defaultSiteSettings;
 	}
@@ -38,6 +46,7 @@ export async function saveSiteSettings(settings: AdminSiteSettings): Promise<voi
 		`${JSON.stringify(settings, null, 2)}\n`,
 		"utf8",
 	);
+	cachedSettings = settings;
 }
 
 export function getDataRelativePath(filePath: string): string {

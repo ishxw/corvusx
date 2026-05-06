@@ -1,0 +1,27 @@
+---
+interface Props {
+	config: {
+		enable: boolean;
+		envId: string;
+	};
+	path?: string;
+	class?: string;
+}
+
+const { path, class: className, config } = Astro.props;
+const { enable, envId } = config;
+---
+
+{enable && (
+    <>
+        <div id="tcomment" class={className}></div>
+        <script is:inline src="https://cdn.staticfile.org/twikoo/1.6.39/twikoo.all.min.js"></script>
+        <script is:inline define:vars={{ envId, path }}>
+            twikoo.init({
+                envId: envId,
+                el: '#tcomment',
+                path: path || window.location.pathname,
+            });
+        </script>
+    </>
+)}

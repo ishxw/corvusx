@@ -3,6 +3,7 @@ import type {
 	NavBarConfig,
 	ProfileConfig,
 	SiteConfig,
+	TwikooConfig,
 } from "@/types/config";
 
 type RuntimeConfigSnapshot = {
@@ -10,6 +11,7 @@ type RuntimeConfigSnapshot = {
 	navBarConfig: NavBarConfig;
 	profileConfig: ProfileConfig;
 	licenseConfig: LicenseConfig;
+	twikooConfig: TwikooConfig;
 };
 
 let cachedRuntimeConfig: RuntimeConfigSnapshot | null = null;

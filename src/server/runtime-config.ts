@@ -1,4 +1,11 @@
-import { LinkPreset, type LicenseConfig, type NavBarConfig, type ProfileConfig, type SiteConfig } from "@/types/config";
+import {
+	LinkPreset,
+	type LicenseConfig,
+	type NavBarConfig,
+	type ProfileConfig,
+	type SiteConfig,
+	type TwikooConfig,
+} from "@/types/config";
 import type { AdminSiteSettings } from "@/types/admin";
 
 export function siteSettingsToRuntimeConfig(settings: AdminSiteSettings): {
@@ -6,6 +13,7 @@ export function siteSettingsToRuntimeConfig(settings: AdminSiteSettings): {
 	navBarConfig: NavBarConfig;
 	profileConfig: ProfileConfig;
 	licenseConfig: LicenseConfig;
+	twikooConfig: TwikooConfig;
 } {
 	return {
 		siteConfig: {
@@ -48,6 +56,10 @@ export function siteSettingsToRuntimeConfig(settings: AdminSiteSettings): {
 			enable: settings.licenseEnabled,
 			name: settings.licenseName,
 			url: settings.licenseUrl,
+		},
+		twikooConfig: {
+			enable: settings.twikooEnabled,
+			envId: settings.twikooEnvId,
 		},
 	};
 }

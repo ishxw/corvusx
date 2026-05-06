@@ -14,8 +14,11 @@ function parseTocDepth(value: string, fallback: 1 | 2 | 3): 1 | 2 | 3 {
 	return fallback;
 }
 
-function parseBannerMode(value: string, fallback: "top" | "center"): "top" | "center" {
-	return value === "top" || value === "center" ? (value as any) : fallback;
+function parseBannerMode(value: string, fallback: "top" | "center" | "bottom"): "top" | "center" | "bottom" {
+	if (value === "top" || value === "center" || value === "bottom") {
+		return value;
+	}
+	return fallback;
 }
 
 function normalizeText(value: FormDataEntryValue | null, fallback: string): string {
@@ -108,16 +111,18 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 			aboutMarkdown: String(form.get("aboutMarkdown") || current.aboutMarkdown),
 			licenseName: normalizeOptionalText(form.get("licenseName"), current.licenseName),
 			licenseUrl: normalizeOptionalText(form.get("licenseUrl"), current.licenseUrl),
+			twikooEnvId: normalizeOptionalText(form.get("twikooEnvId"), current.twikooEnvId),
 			profileLinks,
 			navLinks,
 			bannerEnabled: form.get("bannerEnabled") === "on",
 			tocEnabled: form.get("tocEnabled") === "on",
 			licenseEnabled: form.get("licenseEnabled") === "on",
+			twikooEnabled: form.get("twikooEnabled") === "on",
 		});
 	} catch {
 		return redirect("/admin/settings/?error=save-failed");
 	}
 
-	await logAdminActivity("site:settings", "保存了站点基础信息、导航、头像与 About 内容");
+	await logAdminActivity("site:settings", "保存了站点基础设置、导航链接、Twikoo 评论及版权协议配置");
 	return redirect("/admin/settings/?success=1");
 };

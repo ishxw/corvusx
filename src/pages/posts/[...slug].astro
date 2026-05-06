@@ -2,6 +2,7 @@
 import path from "node:path";
 import License from "@components/misc/License.astro";
 import RuntimeMarkdown from "@components/misc/RuntimeMarkdown.astro";
+import Twikoo from "@components/misc/Twikoo.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
@@ -23,7 +24,7 @@ if (!entry) {
 	return Astro.redirect("/");
 }
 
-const { profileConfig, siteConfig, licenseConfig } = await getRuntimeState();
+const { profileConfig, siteConfig, licenseConfig, twikooConfig } = await getRuntimeState();
 
 const jsonLd = {
 	"@context": "https://schema.org",
@@ -94,6 +95,8 @@ const jsonLd = {
             <RuntimeMarkdown html={entry.html} class="mb-6 markdown-content onload-animation" />
 
             {licenseConfig.enable && <License title={entry.title} slug={entry.slug} pubDate={entry.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
+
+            <Twikoo path={entry.slug} config={twikooConfig} class="onload-animation" />
         </div>
     </div>
 
