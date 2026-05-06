@@ -14,14 +14,40 @@ const { enable, envId } = config;
 
 {enable && (
     <>
-        <div id="tcomment" class={className}></div>
+        <div id="tcomment" class={className} data-twikoo-path={path}></div>
         <script is:inline src="https://cdn.staticfile.org/twikoo/1.6.39/twikoo.all.min.js"></script>
-        <script is:inline define:vars={{ envId, path }}>
-            twikoo.init({
-                envId: envId,
-                el: '#tcomment',
-                path: path || window.location.pathname,
-            });
+        <script is:inline define:vars={{ envId }}>
+            function initTwikoo() {
+                const el = document.getElementById('tcomment');
+                if (!el) return;
+                
+                const path = el.dataset.twikooPath || window.location.pathname;
+                
+                if (typeof twikoo !== 'undefined') {
+                    twikoo.init({
+                        envId: envId,
+                        el: '#tcomment',
+                        path: path,
+                    });
+                } else {
+                    // If twikoo is not yet loaded, wait a bit and retry
+                    setTimeout(initTwikoo, 100);
+                }
+            }
+
+            // Initial load
+            initTwikoo();
+
+            // Swup support
+            if (window.swup) {
+                if (!window.swup.hooks.has('content:replace', initTwikoo)) {
+                    window.swup.hooks.on('content:replace', initTwikoo);
+                }
+            } else {
+                document.addEventListener('swup:enable', () => {
+                    window.swup.hooks.on('content:replace', initTwikoo);
+                });
+            }
         </script>
     </>
 )}
