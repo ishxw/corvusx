@@ -147,11 +147,18 @@
 /* Twikoo Loading Fix: Suppress flicker during SPA navigation */
 #tcomment {
     opacity: 0;
-    transition: opacity 0.3s ease;
+    visibility: hidden;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 #tcomment.twikoo-loaded {
     opacity: 1 !important;
+    visibility: visible !important;
+    max-height: none !important;
+    overflow: visible !important;
 }
+/* Ensure internal loading circles or placeholders never show before ready */
 #tcomment:not(.twikoo-loaded) * {
-    visibility: hidden !important;
+    display: none !important;
 }

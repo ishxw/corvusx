@@ -402,19 +402,32 @@ function initTwikoo() {
 	const el = document.getElementById('tcomment');
 	if (!el) return;
 	
+	// If already loading or loaded, don't re-init
+	if (el.dataset.twikooStatus === 'loading' || el.dataset.twikooStatus === 'loaded') return;
+
 	const path = el.dataset.twikooPath || window.location.pathname;
 	
 	if (typeof twikoo !== 'undefined') {
+		el.dataset.twikooStatus = 'loading';
 		twikoo.init({
 			envId: window.twikooEnvId,
 			el: '#tcomment',
 			path: path,
 			onCommentLoaded: function() {
 				el.classList.add('twikoo-loaded');
+				el.dataset.twikooStatus = 'loaded';
 			}
 		});
-		// Fallback in case onCommentLoaded is not triggered
-		setTimeout(() => el.classList.add('twikoo-loaded'), 1000);
+		// Fallback for visual state
+		setTimeout(() => {
+			if (!el.classList.contains('twikoo-loaded')) {
+				el.classList.add('twikoo-loaded');
+				el.dataset.twikooStatus = 'loaded';
+			}
+		}, 1500);
+	} else {
+		// Library not ready yet, retry in 200ms
+		setTimeout(initTwikoo, 200);
 	}
 }
 

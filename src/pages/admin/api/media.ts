@@ -80,7 +80,8 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 		const item = await renameAdminMedia(oldName, newName);
 		await logAdminActivity("media:rename", `${oldName} -> ${newName}`);
 		return jsonResponse({ ok: true, item });
-	} catch (e: any) {
-		return jsonResponse({ error: e.message }, 500);
+	} catch (e) {
+		const err = e as Error;
+		return jsonResponse({ error: err.message }, 500);
 	}
 };
