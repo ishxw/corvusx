@@ -1,18 +1,21 @@
 ---
 import RuntimeMarkdown from "@components/misc/RuntimeMarkdown.astro";
+import Twikoo from "@components/misc/Twikoo.astro";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import { renderRuntimeMarkdown } from "@/server/runtime-markdown";
-import { getSiteSettings } from "@/server/site-store";
+import { getRuntimeState } from "@/server/runtime-state";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 
-const settings = await getSiteSettings();
+const { settings, twikooConfig } = await getRuntimeState();
 const about = await renderRuntimeMarkdown(settings.aboutMarkdown);
 ---
 <MainGridLayout title={i18n(I18nKey.about)} description={i18n(I18nKey.about)}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full flex-col gap-4">
         <div class="card-base z-10 px-9 py-6 relative w-full ">
             <RuntimeMarkdown class="mt-2" html={about.html} />
         </div>
+        
+        <Twikoo path="about" config={twikooConfig} />
     </div>
 </MainGridLayout>
