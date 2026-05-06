@@ -68,7 +68,8 @@ function applyRepoData(card: HTMLAnchorElement, data: GitHubRepo | null) {
 
 	if (description) {
 		description.innerText =
-			data.description?.replace(/:[a-zA-Z0-9_]+:/g, "") || "Description not set";
+			data.description?.replace(/:[a-zA-Z0-9_]+:/g, "") ||
+			"Description not set";
 	}
 	if (language) language.innerText = data.language || "Unknown";
 	if (forks) forks.innerText = formatCompact(data.forks);
@@ -84,7 +85,10 @@ function applyRepoData(card: HTMLAnchorElement, data: GitHubRepo | null) {
 }
 
 async function loadGitHubCard(card: HTMLAnchorElement) {
-	if (card.dataset.githubCardState === "loading" || card.dataset.githubCardState === "loaded") {
+	if (
+		card.dataset.githubCardState === "loading" ||
+		card.dataset.githubCardState === "loaded"
+	) {
 		return;
 	}
 
@@ -107,15 +111,19 @@ async function loadGitHubCard(card: HTMLAnchorElement) {
 }
 
 function initGitHubCards() {
-	document.querySelectorAll<HTMLAnchorElement>("a.card-github").forEach((card) => {
-		void loadGitHubCard(card);
-	});
+	document
+		.querySelectorAll<HTMLAnchorElement>("a.card-github")
+		.forEach((card) => {
+			void loadGitHubCard(card);
+		});
 }
 
-(window as any).initGitHubCards = initGitHubCards;
+window.initGitHubCards = initGitHubCards;
 
 if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", initGitHubCards, { once: true });
+	document.addEventListener("DOMContentLoaded", initGitHubCards, {
+		once: true,
+	});
 } else {
 	initGitHubCards();
 }

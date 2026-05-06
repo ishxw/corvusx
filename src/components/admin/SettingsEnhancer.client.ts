@@ -21,17 +21,6 @@ type SettingsEnhancerOptions = {
 	navHiddenInputId: string;
 };
 
-declare global {
-	interface Window {
-		initAdminSettingsEnhancer?: (options: SettingsEnhancerOptions) => void;
-		showAdminConfirm?: (message: string) => Promise<boolean>;
-		showAdminAlert?: (message: string, title?: string) => Promise<void>;
-		showAdminPrompt?: (message: string, defaultValue?: string, title?: string) => Promise<string | null>;
-		showAdminToast?: (message: string, tone?: string) => void;
-		adminIsDirty?: boolean;
-	}
-}
-
 function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 	const form = options.form;
 	if (form.dataset.initialized === "true") {
@@ -39,14 +28,24 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 	}
 	form.dataset.initialized = "true";
 
-	const profileContainer = document.getElementById(options.profileContainerId) as HTMLDivElement;
-	const navContainer = document.getElementById(options.navContainerId) as HTMLDivElement;
-	const profileTemplate = document.getElementById(options.profileTemplateId) as HTMLTemplateElement;
-	const navTemplate = document.getElementById(options.navTemplateId) as HTMLTemplateElement;
+	const profileContainer = document.getElementById(
+		options.profileContainerId,
+	) as HTMLDivElement;
+	const navContainer = document.getElementById(
+		options.navContainerId,
+	) as HTMLDivElement;
+	const profileTemplate = document.getElementById(
+		options.profileTemplateId,
+	) as HTMLTemplateElement;
+	const navTemplate = document.getElementById(
+		options.navTemplateId,
+	) as HTMLTemplateElement;
 	const profileHiddenInput = document.getElementById(
 		options.profileHiddenInputId,
 	) as HTMLInputElement;
-	const navHiddenInput = document.getElementById(options.navHiddenInputId) as HTMLInputElement;
+	const navHiddenInput = document.getElementById(
+		options.navHiddenInputId,
+	) as HTMLInputElement;
 
 	const setTextContent = (el: HTMLElement | null, text: string) => {
 		if (el) el.textContent = text;
@@ -56,13 +55,20 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 		row.querySelector<HTMLInputElement>(`[data-field="${field}"]`)?.value || "";
 
 	const getCheckboxValue = (row: HTMLElement, field: string) =>
-		row.querySelector<HTMLInputElement>(`[data-field="${field}"]`)?.checked || false;
+		row.querySelector<HTMLInputElement>(`[data-field="${field}"]`)?.checked ||
+		false;
 
-	const profileCount = document.querySelector<HTMLElement>("[data-profile-link-count]");
+	const profileCount = document.querySelector<HTMLElement>(
+		"[data-profile-link-count]",
+	);
 	const navCount = document.querySelector<HTMLElement>("[data-nav-link-count]");
-	const profileEmpty = document.querySelector<HTMLElement>("[data-profile-empty]");
+	const profileEmpty = document.querySelector<HTMLElement>(
+		"[data-profile-empty]",
+	);
 	const navEmpty = document.querySelector<HTMLElement>("[data-nav-empty]");
-	const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+	const submitButton = form.querySelector<HTMLButtonElement>(
+		'button[type="submit"]',
+	);
 	const submitText = submitButton?.querySelector("span");
 
 	let isDirty = false;
@@ -80,7 +86,9 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 		}
 
 		for (const [key, value] of Object.entries(payload)) {
-			const field = node.querySelector<HTMLInputElement | HTMLSelectElement>(`[data-field="${key}"]`);
+			const field = node.querySelector<HTMLInputElement | HTMLSelectElement>(
+				`[data-field="${key}"]`,
+			);
 			if (!field) continue;
 			if (field instanceof HTMLInputElement && field.type === "checkbox") {
 				field.checked = Boolean(value);
@@ -102,11 +110,16 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 	};
 
 	const clearRowValidity = (row: HTMLElement) => {
-		row.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-field]").forEach((field) => {
-			if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
-				field.setCustomValidity("");
-			}
-		});
+		row
+			.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-field]")
+			.forEach((field) => {
+				if (
+					field instanceof HTMLInputElement ||
+					field instanceof HTMLSelectElement
+				) {
+					field.setCustomValidity("");
+				}
+			});
 	};
 
 	const validateRows = () => {
@@ -118,7 +131,8 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 			const name = getInputValue(row, "name");
 			const icon = getInputValue(row, "icon");
 			if ((name || icon) && !url) {
-				const target = row.querySelector<HTMLInputElement>('[data-field="url"]');
+				const target =
+					row.querySelector<HTMLInputElement>('[data-field="url"]');
 				target?.setCustomValidity("请输入社交链接 URL。");
 				firstInvalid ??= target || null;
 			}
@@ -179,16 +193,16 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 	const checkDirty = () => {
 		syncHiddenInputs();
 		if (!initialData) return;
-		
+
 		const currentData = new FormData(form);
 		let dirty = false;
-		
+
 		const initialKeys = Array.from(initialData.keys());
 		const currentKeys = Array.from(currentData.keys());
-		
+
 		// If the set of keys is different (e.g. checkbox changed), it's dirty
 		const allKeys = new Set([...initialKeys, ...currentKeys]);
-		
+
 		for (const key of allKeys) {
 			const initialValue = initialData.get(key);
 			const currentValue = currentData.get(key);
@@ -197,16 +211,24 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 				break;
 			}
 		}
-		
+
 		isDirty = dirty;
 		if (window.adminIsDirty !== undefined) window.adminIsDirty = isDirty;
-		
+
 		const saveBar = document.getElementById("admin-save-bar");
 		if (saveBar) {
 			if (isDirty) {
-				saveBar.classList.remove("translate-y-24", "opacity-0", "pointer-events-none");
+				saveBar.classList.remove(
+					"translate-y-24",
+					"opacity-0",
+					"pointer-events-none",
+				);
 			} else {
-				saveBar.classList.add("translate-y-24", "opacity-0", "pointer-events-none");
+				saveBar.classList.add(
+					"translate-y-24",
+					"opacity-0",
+					"pointer-events-none",
+				);
 			}
 		}
 	};
@@ -225,8 +247,15 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 
 	form.addEventListener("input", (event) => {
 		const target = event.target;
-		if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement) {
-			if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement) {
+		if (
+			target instanceof HTMLInputElement ||
+			target instanceof HTMLSelectElement ||
+			target instanceof HTMLTextAreaElement
+		) {
+			if (
+				target instanceof HTMLInputElement ||
+				target instanceof HTMLSelectElement
+			) {
 				target.setCustomValidity("");
 			}
 			checkDirty();
@@ -249,7 +278,9 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 			return;
 		}
 
-		const profileAddButton = target.closest<HTMLElement>("[data-add-row='profile']");
+		const profileAddButton = target.closest<HTMLElement>(
+			"[data-add-row='profile']",
+		);
 		if (profileAddButton) {
 			addRow(profileContainer, profileTemplate, {
 				name: "",
@@ -310,7 +341,7 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 	});
 
 	window.addEventListener("beforeunload", (event) => {
-		if (!(window as any).adminIsDirty) return;
+		if (!window.adminIsDirty) return;
 		event.preventDefault();
 	});
 
@@ -322,17 +353,19 @@ function initAdminSettingsEnhancer(options: SettingsEnhancerOptions) {
 window.initAdminSettingsEnhancer = initAdminSettingsEnhancer;
 
 function bootSettingsForms() {
-	document.querySelectorAll<HTMLFormElement>("[data-admin-settings-form]").forEach((form) => {
-		window.initAdminSettingsEnhancer?.({
-			form,
-			profileContainerId: "profile-links-container",
-			navContainerId: "nav-links-container",
-			profileTemplateId: "profile-link-template",
-			navTemplateId: "nav-link-template",
-			profileHiddenInputId: "profileLinksJson",
-			navHiddenInputId: "navLinksJson",
+	document
+		.querySelectorAll<HTMLFormElement>("[data-admin-settings-form]")
+		.forEach((form) => {
+			window.initAdminSettingsEnhancer?.({
+				form,
+				profileContainerId: "profile-links-container",
+				navContainerId: "nav-links-container",
+				profileTemplateId: "profile-link-template",
+				navTemplateId: "nav-link-template",
+				profileHiddenInputId: "profileLinksJson",
+				navHiddenInputId: "navLinksJson",
+			});
 		});
-	});
 }
 
 if (document.readyState === "loading") {

@@ -1,35 +1,41 @@
 import { defineMiddleware } from "astro:middleware";
-import { verifySessionToken } from "./server/auth";
-import { getSiteSettings } from "./server/site-store";
-import { setCachedRuntimeConfig } from "./server/config-cache";
-import { siteSettingsToRuntimeConfig } from "./server/runtime-config";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { verifySessionToken } from "./server/auth";
+import { setCachedRuntimeConfig } from "./server/config-cache";
+import { siteSettingsToRuntimeConfig } from "./server/runtime-config";
+import { getSiteSettings } from "./server/site-store";
 
-export const onRequest = defineMiddleware(async (context, next) => {
-	const url = new URL(context.request.url);
+export const onRequest: ReturnType<typeof defineMiddleware> = defineMiddleware(
+	async (context, next) => {
+		const url = new URL(context.request.url);
+		const pathname = url.pathname;
+		const lowercasePath = pathname.toLowerCase();
 
-	// Performance: Skip middleware logic for static assets and internal Astro paths
-	if (
-		url.pathname.startsWith("/_astro/") ||
-		url.pathname.startsWith("/favicon/") ||
-		url.pathname.startsWith("/assets/") ||
-		url.pathname.endsWith(".png") ||
-		url.pathname.endsWith(".jpg") ||
-		url.pathname.endsWith(".jpeg") ||
-		url.pathname.endsWith(".webp") ||
-		url.pathname.endsWith(".svg")
-	) {
-		return next();
-	}
-	
-	// Direct serve for uploads to avoid Astro static serving issues in dev/prod
-	if (url.pathname.startsWith("/uploads/")) {
-		const fileName = path.basename(decodeURIComponent(url.pathname));
-		const filePath = path.resolve("data/uploads", fileName);
-		try {
-			const stats = await fs.stat(filePath);
-			if (stats.isFile()) {
+		// Always serve uploads from filesystem directly to keep runtime mapping stable.
+		if (pathname.startsWith("/uploads/")) {
+			let decodedPathname = pathname;
+			try {
+				decodedPathname = decodeURIComponent(pathname);
+			} catch {
+				return new Response("Not Found", { status: 404 });
+			}
+
+			const relativePath = decodedPathname
+				.slice("/uploads/".length)
+				.replace(/\/+$/g, "");
+			const fileName = path.basename(relativePath);
+			if (!relativePath || !fileName || fileName === ".") {
+				return new Response("Not Found", { status: 404 });
+			}
+
+			const filePath = path.resolve("data/uploads", fileName);
+			try {
+				const stats = await fs.stat(filePath);
+				if (!stats.isFile()) {
+					return new Response("Not Found", { status: 404 });
+				}
+
 				const data = await fs.readFile(filePath);
 				const ext = path.extname(filePath).toLowerCase();
 				const mimeTypes: Record<string, string> = {
@@ -40,26 +46,40 @@ export const onRequest = defineMiddleware(async (context, next) => {
 					".webp": "image/webp",
 					".svg": "image/svg+xml",
 				};
-				return new Response(data, {
+				return new Response(data as unknown as BodyInit, {
 					headers: {
 						"Content-Type": mimeTypes[ext] || "application/octet-stream",
 						"Cache-Control": "public, max-age=31536000",
 					},
 				});
+			} catch {
+				return new Response("Not Found", { status: 404 });
 			}
-		} catch (e) {
-			// Fall through if file not found
 		}
-	}
 
-	const token = context.cookies.get("corvusx_admin_session")?.value;
-	const username = await verifySessionToken(token);
-	context.locals.adminUser = username;
+		// Performance: Skip middleware logic for static assets and internal Astro paths
+		if (
+			pathname.startsWith("/_astro/") ||
+			pathname.startsWith("/favicon/") ||
+			pathname.startsWith("/assets/") ||
+			lowercasePath.endsWith(".png") ||
+			lowercasePath.endsWith(".jpg") ||
+			lowercasePath.endsWith(".jpeg") ||
+			lowercasePath.endsWith(".webp") ||
+			lowercasePath.endsWith(".svg")
+		) {
+			return next();
+		}
 
-	const settings = await getSiteSettings();
-	setCachedRuntimeConfig({
-		...siteSettingsToRuntimeConfig(settings),
-	});
+		const token = context.cookies.get("corvusx_admin_session")?.value;
+		const username = await verifySessionToken(token);
+		context.locals.adminUser = username;
 
-	return next();
-});
+		const settings = await getSiteSettings();
+		setCachedRuntimeConfig({
+			...siteSettingsToRuntimeConfig(settings),
+		});
+
+		return next();
+	},
+);

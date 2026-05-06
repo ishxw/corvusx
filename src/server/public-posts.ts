@@ -1,5 +1,5 @@
 import { listPublicPosts } from "./post-store";
-import { renderRuntimeMarkdown, type RuntimeHeading } from "./runtime-markdown";
+import { type RuntimeHeading, renderRuntimeMarkdown } from "./runtime-markdown";
 
 export type RuntimeRenderedPost = {
 	slug: string;
@@ -25,7 +25,9 @@ export type RuntimeRenderedPost = {
 	nextTitle?: string;
 };
 
-export async function getRuntimeRenderedPosts(includeDrafts = false): Promise<RuntimeRenderedPost[]> {
+export async function getRuntimeRenderedPosts(
+	includeDrafts = false,
+): Promise<RuntimeRenderedPost[]> {
 	const posts = await listPublicPosts(includeDrafts);
 	const rendered: RuntimeRenderedPost[] = await Promise.all(
 		posts.map(async (post) => {
@@ -61,7 +63,11 @@ export async function getRuntimeRenderedPostBySlug(
 	return posts.find((post) => post.slug === slug) ?? null;
 }
 
-export function buildPagination(currentPage: number, totalItems: number, pageSize: number) {
+export function buildPagination(
+	currentPage: number,
+	totalItems: number,
+	pageSize: number,
+) {
 	const lastPage = Math.max(1, Math.ceil(totalItems / pageSize));
 	const safeCurrentPage = Math.min(Math.max(currentPage, 1), lastPage);
 	const start = (safeCurrentPage - 1) * pageSize;
@@ -79,10 +85,7 @@ export function buildPagination(currentPage: number, totalItems: number, pageSiz
 						? "/"
 						: `/${safeCurrentPage - 1}/`
 					: undefined,
-			next:
-				safeCurrentPage < lastPage
-					? `/${safeCurrentPage + 1}/`
-					: undefined,
+			next: safeCurrentPage < lastPage ? `/${safeCurrentPage + 1}/` : undefined,
 			first: safeCurrentPage > 1 ? "/" : undefined,
 			last: safeCurrentPage < lastPage ? `/${lastPage}/` : undefined,
 		},

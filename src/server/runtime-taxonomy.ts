@@ -1,6 +1,6 @@
-import type { RuntimeRenderedPost } from "./public-posts";
 import type { Category, Tag } from "@/utils/content-utils";
 import { getCategoryUrl, getTagUrl } from "@/utils/url-utils";
+import type { RuntimeRenderedPost } from "./public-posts";
 
 export function getRuntimeTags(posts: RuntimeRenderedPost[]): Tag[] {
 	const countMap: Record<string, number> = {};

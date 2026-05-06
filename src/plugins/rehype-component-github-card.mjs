@@ -38,7 +38,11 @@ export function GithubCardComponent(properties, children) {
 		h("div", { class: "github-logo" }),
 	]);
 
-	const nDescription = h("div", { class: "gc-description" }, "Waiting for api.github.com...");
+	const nDescription = h(
+		"div",
+		{ class: "gc-description" },
+		"Waiting for api.github.com...",
+	);
 
 	const nStars = h("div", { class: "gc-stars" }, "00K");
 	const nForks = h("div", { class: "gc-forks" }, "0K");

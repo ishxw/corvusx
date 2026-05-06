@@ -45,7 +45,9 @@ const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
 	try {
 		let searchResults: SearchResult[] = [];
 
-		const response = await fetch(`/api/search.json?q=${encodeURIComponent(keyword)}`);
+		const response = await fetch(
+			`/api/search.json?q=${encodeURIComponent(keyword)}`,
+		);
 		if (!response.ok) {
 			throw new Error(`Search API returned ${response.status}`);
 		}

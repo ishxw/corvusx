@@ -1,9 +1,12 @@
 ---
+import {
+	buildPagination,
+	getRuntimeRenderedPosts,
+} from "@/server/public-posts";
 import Pagination from "../components/control/Pagination.astro";
 import PostPage from "../components/PostPage.astro";
 import { PAGE_SIZE } from "../constants/constants";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
-import { buildPagination, getRuntimeRenderedPosts } from "@/server/public-posts";
 
 const pageParam = Astro.params.page;
 const currentPage = pageParam ? Number(pageParam) : 1;

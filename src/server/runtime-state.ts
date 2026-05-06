@@ -1,6 +1,6 @@
-import { getSiteSettings } from "./site-store";
-import { siteSettingsToRuntimeConfig } from "./runtime-config";
 import { setCachedRuntimeConfig } from "./config-cache";
+import { siteSettingsToRuntimeConfig } from "./runtime-config";
+import { getSiteSettings } from "./site-store";
 
 export async function getRuntimeState() {
 	const settings = await getSiteSettings();

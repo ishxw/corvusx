@@ -1,6 +1,10 @@
 import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
-import { getAdminPost, moveAdminPostSlug, saveAdminPost } from "@/server/post-store";
+import {
+	getAdminPost,
+	moveAdminPostSlug,
+	saveAdminPost,
+} from "@/server/post-store";
 
 function normalizeDate(value: string): string {
 	return value || new Date().toISOString().slice(0, 10);
@@ -51,7 +55,10 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 	const mode = String(form.get("mode") || "create");
 	const intent = String(form.get("intent") || "stay");
 	const slug = String(form.get("slug") || "").replace(/^\/|\/$/g, "");
-	const originalSlug = String(form.get("originalSlug") || slug).replace(/^\/|\/$/g, "");
+	const originalSlug = String(form.get("originalSlug") || slug).replace(
+		/^\/|\/$/g,
+		"",
+	);
 	const title = String(form.get("title") || "").trim();
 
 	if (!slug || !title) {
@@ -84,7 +91,9 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 		category: String(form.get("category") || "").trim(),
 		draft: form.get("publishedState") !== "on",
 		lang: existing?.lang || "",
-		body: String(form.get("body") || "").replace(/\r\n/g, "\n").trim(),
+		body: String(form.get("body") || "")
+			.replace(/\r\n/g, "\n")
+			.trim(),
 	});
 
 	if (mode === "update" && originalSlug !== slug) {

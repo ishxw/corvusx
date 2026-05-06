@@ -16,7 +16,10 @@ function parsePublishAt(value: string | undefined): Date | undefined {
 	return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
-export function getAdminPostStatus(post: AdminPost, now = new Date()): AdminPostStatusInfo {
+export function getAdminPostStatus(
+	post: AdminPost,
+	now = new Date(),
+): AdminPostStatusInfo {
 	if (post.draft) {
 		return {
 			status: "draft",

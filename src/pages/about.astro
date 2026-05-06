@@ -1,10 +1,10 @@
 ---
 import RuntimeMarkdown from "@components/misc/RuntimeMarkdown.astro";
 import Twikoo from "@components/misc/Twikoo.astro";
-import I18nKey from "../i18n/i18nKey";
-import { i18n } from "../i18n/translation";
 import { renderRuntimeMarkdown } from "@/server/runtime-markdown";
 import { getRuntimeState } from "@/server/runtime-state";
+import I18nKey from "../i18n/i18nKey";
+import { i18n } from "../i18n/translation";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 const { settings, twikooConfig } = await getRuntimeState();

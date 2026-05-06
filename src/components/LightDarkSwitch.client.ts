@@ -57,7 +57,9 @@ function initThemeSwitcher() {
 
 	root.querySelectorAll<HTMLElement>(".theme-option").forEach((button) => {
 		button.addEventListener("click", () => {
-		const mode = button.getAttribute("data-theme-option") as LIGHT_DARK_MODE | null;
+			const mode = button.getAttribute(
+				"data-theme-option",
+			) as LIGHT_DARK_MODE | null;
 			if (mode) {
 				applyMode(mode);
 			}

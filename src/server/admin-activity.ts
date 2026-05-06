@@ -36,9 +36,7 @@ function normalizeAction(value: string): string {
 }
 
 function normalizeDetail(value: string): string {
-	const normalized = value
-		.replaceAll("×", "×")
-		.replaceAll("…", "…");
+	const normalized = value.replaceAll("×", "×").replaceAll("…", "…");
 
 	const batchMatch = /^([a-z-]+)\s*[×x]\s*(\d+)$/.exec(normalized);
 	if (batchMatch && batchActionLabels[batchMatch[1]]) {

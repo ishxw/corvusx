@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ params }) => {
 	const fileName = path.basename(decodedPath);
 	const baseDir = path.resolve(process.cwd(), "data", "uploads");
 	const absolutePath = path.join(baseDir, fileName);
-	
+
 	if (!absolutePath.startsWith(baseDir)) {
 		return new Response("Forbidden", { status: 403 });
 	}
@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ params }) => {
 
 		const data = await fs.readFile(absolutePath);
 		const ext = path.extname(absolutePath).toLowerCase();
-		
+
 		const mimeTypes: Record<string, string> = {
 			".png": "image/png",
 			".jpg": "image/jpeg",
@@ -36,15 +36,15 @@ export const GET: APIRoute = async ({ params }) => {
 			".svg": "image/svg+xml",
 		};
 
-		return new Response(data, {
+		return new Response(data as unknown as BodyInit, {
 			headers: {
 				"Content-Type": mimeTypes[ext] || "application/octet-stream",
 				"Cache-Control": "no-cache, no-store, must-revalidate",
-				"Pragma": "no-cache",
-				"Expires": "0",
+				Pragma: "no-cache",
+				Expires: "0",
 			},
 		});
-	} catch (e) {
+	} catch (_e) {
 		return new Response("Not Found", { status: 404 });
 	}
 };

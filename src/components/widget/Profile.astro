@@ -1,8 +1,8 @@
 ---
 import { Icon } from "astro-icon/components";
+import { getRuntimeState } from "@/server/runtime-state";
 import { profileConfig } from "../../config";
 import { url } from "../../utils/url-utils";
-import { getRuntimeState } from "@/server/runtime-state";
 import ImageWrapper from "../misc/ImageWrapper.astro";
 
 const { profileConfig: runtimeProfileConfig } = await getRuntimeState();

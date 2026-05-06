@@ -1,12 +1,12 @@
+import type { AdminSiteSettings } from "@/types/admin";
 import {
-	LinkPreset,
 	type LicenseConfig,
+	LinkPreset,
 	type NavBarConfig,
 	type ProfileConfig,
 	type SiteConfig,
 	type TwikooConfig,
 } from "@/types/config";
-import type { AdminSiteSettings } from "@/types/admin";
 
 export function siteSettingsToRuntimeConfig(settings: AdminSiteSettings): {
 	siteConfig: SiteConfig;

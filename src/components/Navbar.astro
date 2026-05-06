@@ -1,10 +1,10 @@
 ---
 import { Icon } from "astro-icon/components";
+import { getRuntimeState } from "@/server/runtime-state";
 import { navBarConfig, siteConfig } from "../config";
 import { LinkPresets } from "../constants/link-presets";
 import { LinkPreset, type NavBarLink } from "../types/config";
 import { url } from "../utils/url-utils";
-import { getRuntimeState } from "@/server/runtime-state";
 import LightDarkSwitch from "./LightDarkSwitch.astro";
 import Search from "./Search.svelte";
 import DisplaySettings from "./widget/DisplaySettings.svelte";
@@ -14,14 +14,14 @@ const className = Astro.props.class;
 const { navBarConfig: runtimeNavBarConfig, siteConfig: runtimeSiteConfig } =
 	await getRuntimeState();
 
-let links: NavBarLink[] = (runtimeNavBarConfig?.links || navBarConfig.links).map(
-	(item: NavBarLink | LinkPreset): NavBarLink => {
-		if (typeof item === "number") {
-			return LinkPresets[item];
-		}
-		return item;
-	},
-);
+let links: NavBarLink[] = (
+	runtimeNavBarConfig?.links || navBarConfig.links
+).map((item: NavBarLink | LinkPreset): NavBarLink => {
+	if (typeof item === "number") {
+		return LinkPresets[item];
+	}
+	return item;
+});
 ---
 <div id="navbar" class="z-50 onload-animation">
 	<div class="absolute left-0 right-0 -top-8 h-8 bg-[var(--card-bg)] transition"></div>

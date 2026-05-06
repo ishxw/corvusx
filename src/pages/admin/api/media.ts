@@ -1,6 +1,11 @@
 import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
-import { deleteAdminMedia, listAdminMedia, renameAdminMedia, saveAdminMediaFile } from "@/server/media-store";
+import {
+	deleteAdminMedia,
+	listAdminMedia,
+	renameAdminMedia,
+	saveAdminMediaFile,
+} from "@/server/media-store";
 
 function wantsJson(request: Request): boolean {
 	const accept = request.headers.get("accept") || "";
@@ -71,7 +76,10 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 		return jsonResponse({ error: "Unauthorized" }, 401);
 	}
 
-	const { oldName, newName } = (await request.json()) as { oldName?: string; newName?: string };
+	const { oldName, newName } = (await request.json()) as {
+		oldName?: string;
+		newName?: string;
+	};
 	if (!oldName || !newName) {
 		return jsonResponse({ error: "Missing parameters" }, 400);
 	}

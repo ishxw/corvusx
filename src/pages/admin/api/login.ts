@@ -5,7 +5,13 @@ import { createSessionToken, verifyAdminCredentials } from "@/server/auth";
 // Simple in-memory rate limiting
 const loginAttempts = new Map<string, { count: number; lockUntil: number }>();
 
-export const POST: APIRoute = async ({ request, cookies, redirect, url, clientAddress }) => {
+export const POST: APIRoute = async ({
+	request,
+	cookies,
+	redirect,
+	url,
+	clientAddress,
+}) => {
 	const form = await request.formData();
 	const username = String(form.get("username") || "").trim();
 	const password = String(form.get("password") || "");

@@ -1,23 +1,26 @@
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkDirective from "remark-directive";
-import remarkSectionize from "remark-sectionize";
-import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
-import remarkRehype from "remark-rehype";
-import rehypeSlug from "rehype-slug";
-import rehypeKatex from "rehype-katex";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeComponents from "rehype-components";
-import rehypeStringify from "rehype-stringify";
-import rehypeExpressiveCode from "rehype-expressive-code";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import GithubSlugger from "github-slugger";
 import readingTime from "reading-time";
-import { parseDirectiveNode } from "@/plugins/remark-directive-rehype";
-import { GithubCardComponent } from "@/plugins/rehype-component-github-card.mjs";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeComponents from "rehype-components";
+import rehypeExpressiveCode from "rehype-expressive-code";
+import rehypeKatex from "rehype-katex";
+import rehypeSlug from "rehype-slug";
+import rehypeStringify from "rehype-stringify";
+import remarkDirective from "remark-directive";
+import remarkGfm from "remark-gfm";
+import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
+import remarkMath from "remark-math";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import remarkSectionize from "remark-sectionize";
+import { unified } from "unified";
+// @ts-expect-error
 import { AdmonitionComponent } from "@/plugins/rehype-component-admonition.mjs";
+// @ts-expect-error
+import { GithubCardComponent } from "@/plugins/rehype-component-github-card.mjs";
+// @ts-expect-error
+import { parseDirectiveNode } from "@/plugins/remark-directive-rehype";
 
 export type RuntimeHeading = {
 	depth: number;
@@ -79,20 +82,33 @@ export async function renderRuntimeMarkdown(markdown: string): Promise<{
 		.use(remarkGithubAdmonitionsToDirectives)
 		.use(remarkDirective)
 		.use(remarkSectionize)
+		// biome-ignore lint/suspicious/noExplicitAny: Expected usage in rehype
 		.use(parseDirectiveNode as any)
 		.use(remarkRehype, { allowDangerousHtml: true })
 		.use(rehypeKatex)
 		.use(rehypeSlug)
-		.use(rehypeComponents as any, {
-			components: {
-				github: GithubCardComponent as any,
-				note: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "note"),
-				tip: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "tip"),
-				important: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "important"),
-				caution: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "caution"),
-				warning: (props: Record<string, unknown>, children: unknown) => AdmonitionComponent(props, children, "warning"),
-			},
-		} as any)
+		.use(
+			// biome-ignore lint/suspicious/noExplicitAny: Expected usage in rehype
+			rehypeComponents as any,
+			{
+				components: {
+					// biome-ignore lint/suspicious/noExplicitAny: Expected usage in rehype
+					github: GithubCardComponent as any,
+					note: (props: Record<string, unknown>, children: unknown) =>
+						AdmonitionComponent(props, children, "note"),
+					tip: (props: Record<string, unknown>, children: unknown) =>
+						AdmonitionComponent(props, children, "tip"),
+					important: (props: Record<string, unknown>, children: unknown) =>
+						AdmonitionComponent(props, children, "important"),
+					caution: (props: Record<string, unknown>, children: unknown) =>
+						AdmonitionComponent(props, children, "caution"),
+					warning: (props: Record<string, unknown>, children: unknown) =>
+						AdmonitionComponent(props, children, "warning"),
+				},
+				// biome-ignore lint/suspicious/noExplicitAny: Expected usage in rehype
+			} as any,
+		)
+		// @ts-expect-error Type mismatch in expressive code config
 		.use(rehypeExpressiveCode, {
 			themes: ["github-dark"],
 			plugins: [pluginLineNumbers()],
@@ -101,7 +117,7 @@ export async function renderRuntimeMarkdown(markdown: string): Promise<{
 			},
 			frames: {
 				showCopyToClipboardButton: true,
-			}
+			},
 		})
 		.use(rehypeAutolinkHeadings, {
 			behavior: "append",

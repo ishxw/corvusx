@@ -38,8 +38,7 @@ onMount(async () => {
 	if (tags.length > 0) {
 		filteredPosts = filteredPosts.filter(
 			(post) =>
-				Array.isArray(post.tags) &&
-				post.tags.some((tag) => tags.includes(tag)),
+				Array.isArray(post.tags) && post.tags.some((tag) => tags.includes(tag)),
 		);
 	}
 

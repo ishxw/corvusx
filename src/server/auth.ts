@@ -85,7 +85,9 @@ export async function createSessionToken(username: string): Promise<string> {
 	return Buffer.from(`${payload}.${signature}`, "utf8").toString("base64url");
 }
 
-export async function verifySessionToken(token: string | undefined): Promise<string | null> {
+export async function verifySessionToken(
+	token: string | undefined,
+): Promise<string | null> {
 	if (!token) return null;
 
 	try {

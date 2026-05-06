@@ -21,7 +21,13 @@ export function toMediaUrl(fileName: string): string {
 export function sanitizeMediaName(fileName: string): string {
 	// Remove characters that are definitely illegal in file systems or problematic in URLs
 	// But preserve characters that are valid in most modern OSs and URL paths (like Chinese characters)
-	return fileName.replace(/[<>:"/\\|?*\x00-\x1F]/g, "-").replace(/-+/g, "-").trim();
+	return (
+		fileName
+			// biome-ignore lint/suspicious/noControlCharactersInRegex: Required for sanitizing file names
+			.replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-")
+			.replace(/-+/g, "-")
+			.trim()
+	);
 }
 
 export async function listAdminMedia(): Promise<AdminMediaItem[]> {
@@ -52,12 +58,17 @@ export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
 	const originalName = file.name || "upload.bin";
 	const ext = path.extname(originalName);
 	const baseName = path.basename(originalName, ext);
-	
+
 	let fileName = originalName;
 	let targetPath = path.join(UPLOAD_DIR, fileName);
 	let counter = 1;
 
-	while (await fs.access(targetPath).then(() => true).catch(() => false)) {
+	while (
+		await fs
+			.access(targetPath)
+			.then(() => true)
+			.catch(() => false)
+	) {
 		fileName = `${baseName}-${counter}${ext}`;
 		targetPath = path.join(UPLOAD_DIR, fileName);
 		counter++;
@@ -81,10 +92,13 @@ export async function deleteAdminMedia(fileOrUrl: string): Promise<void> {
 	await fs.rm(targetPath, { force: true });
 }
 
-export async function renameAdminMedia(oldName: string, newName: string): Promise<AdminMediaItem> {
+export async function renameAdminMedia(
+	oldName: string,
+	newName: string,
+): Promise<AdminMediaItem> {
 	const oldExt = path.extname(oldName);
 	let safeNewName = sanitizeMediaName(newName);
-	
+
 	// If the new name doesn't have an extension, preserve the old one
 	if (path.extname(safeNewName) === "" && oldExt !== "") {
 		safeNewName += oldExt;
@@ -95,9 +109,17 @@ export async function renameAdminMedia(oldName: string, newName: string): Promis
 	const newPath = path.join(UPLOAD_DIR, safeNewName);
 
 	// Case-insensitive check: if names differ ONLY in case, skip existence check
-	const isCaseOnlyChange = oldBasename.toLowerCase() === safeNewName.toLowerCase() && oldBasename !== safeNewName;
+	const isCaseOnlyChange =
+		oldBasename.toLowerCase() === safeNewName.toLowerCase() &&
+		oldBasename !== safeNewName;
 
-	if (!isCaseOnlyChange && await fs.access(newPath).then(() => true).catch(() => false)) {
+	if (
+		!isCaseOnlyChange &&
+		(await fs
+			.access(newPath)
+			.then(() => true)
+			.catch(() => false))
+	) {
 		throw new Error("Target file already exists.");
 	}
 

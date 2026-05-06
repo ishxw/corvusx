@@ -1,6 +1,6 @@
 ---
-import { siteConfig } from "../config";
 import { getRuntimeState } from "@/server/runtime-state";
+import { siteConfig } from "../config";
 
 const { siteConfig: runtimeSiteConfig } = await getRuntimeState();
 const config = runtimeSiteConfig || siteConfig;

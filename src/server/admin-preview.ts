@@ -9,7 +9,9 @@ const assetUrls = import.meta.glob("../assets/**/*", {
 	eager: true,
 }) as Record<string, string>;
 
-export async function resolveAdminPreviewUrl(input: string): Promise<PreviewUrlResult> {
+export async function resolveAdminPreviewUrl(
+	input: string,
+): Promise<PreviewUrlResult> {
 	const trimmed = input.trim();
 	if (!trimmed) {
 		return { value: "", isResolvable: false };
@@ -27,7 +29,9 @@ export async function resolveAdminPreviewUrl(input: string): Promise<PreviewUrlR
 	const normalized = trimmed.replace(/\\/g, "/").replace(/^\.?\//, "");
 	const candidateKeys = [
 		`../${normalized}`,
-		normalized.startsWith("src/") ? `../${normalized.replace(/^src\//, "")}` : "",
+		normalized.startsWith("src/")
+			? `../${normalized.replace(/^src\//, "")}`
+			: "",
 	].filter(Boolean);
 
 	for (const key of candidateKeys) {

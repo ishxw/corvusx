@@ -3,7 +3,8 @@ import { getRuntimeRenderedPosts } from "@/server/public-posts";
 import { getPostUrlBySlug } from "@/utils/url-utils";
 
 export const GET: APIRoute = async ({ request }) => {
-	const query = new URL(request.url).searchParams.get("q")?.trim().toLowerCase() || "";
+	const query =
+		new URL(request.url).searchParams.get("q")?.trim().toLowerCase() || "";
 
 	if (!query) {
 		return new Response(JSON.stringify({ results: [] }), {

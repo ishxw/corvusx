@@ -1,11 +1,13 @@
 ---
-title: Corvusx 写作速查
+title: "Corvusx 写作速查"
 published: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-06
 description: "记录这个博客常用的 Markdown 扩展语法，方便以后发文时直接复制。"
-tags: [写作, Markdown, Astro]
-category: 站点
+image: ""
+tags: ["写作", "Markdown", "Astro"]
+category: "站点"
 draft: false
+lang: ""
 ---
 
 这篇文章保留给未来的我，当作一个随手可查的写作备忘录。
@@ -89,3 +91,4 @@ export const siteConfig = {
 行内公式示例：$\omega = d\phi / dt$。
 
 $$I = \int \rho R^{2} dV$$
+

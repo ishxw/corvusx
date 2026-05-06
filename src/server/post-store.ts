@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
-import { getAdminPostStatus } from "./admin-post-status";
 import type { AdminPost, PublicPostSummary } from "@/types/admin";
+import { getAdminPostStatus } from "./admin-post-status";
 import { POSTS_DIR } from "./paths";
 
 type Frontmatter = {
@@ -22,7 +22,9 @@ async function ensureDir(dir: string) {
 	await fs.mkdir(dir, { recursive: true });
 }
 
-function normalizeFrontmatterDate(value: string | Date | undefined): string | undefined {
+function normalizeFrontmatterDate(
+	value: string | Date | undefined,
+): string | undefined {
 	if (!value) return undefined;
 	if (value instanceof Date) {
 		if (Number.isNaN(value.getTime())) return undefined;
@@ -43,7 +45,9 @@ function normalizeFrontmatterDate(value: string | Date | undefined): string | un
 	return undefined;
 }
 
-function normalizeDateTime(value: string | Date | undefined): string | undefined {
+function normalizeDateTime(
+	value: string | Date | undefined,
+): string | undefined {
 	if (!value) return undefined;
 	if (value instanceof Date) {
 		if (Number.isNaN(value.getTime())) return undefined;
@@ -214,10 +218,15 @@ export async function deleteAdminPost(slug: string): Promise<void> {
 	await fs.rm(targetPath, { force: true });
 }
 
-export async function listPublicPosts(includeDrafts = false): Promise<PublicPostSummary[]> {
+export async function listPublicPosts(
+	includeDrafts = false,
+): Promise<PublicPostSummary[]> {
 	const posts = await listAdminPosts();
 	return posts
-		.filter((post) => includeDrafts || getAdminPostStatus(post).status === "published")
+		.filter(
+			(post) =>
+				includeDrafts || getAdminPostStatus(post).status === "published",
+		)
 		.map((post) => ({
 			slug: post.slug,
 			sourcePath: post.sourcePath,
