@@ -15,7 +15,8 @@ const about = await renderRuntimeMarkdown(settings.aboutMarkdown);
         <div class="card-base z-10 px-9 py-6 relative w-full ">
             <RuntimeMarkdown class="mt-2" html={about.html} />
         </div>
-        
-        <Twikoo path="about" config={twikooConfig} />
+        <div class="card-base z-10 px-9 py-6 relative w-full">
+            <Twikoo path="about" config={twikooConfig} />
+        </div>
     </div>
 </MainGridLayout>
