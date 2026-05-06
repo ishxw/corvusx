@@ -1,3 +1,4 @@
+import { getCachedRuntimeConfig } from "./server/config-cache";
 import type {
 	ExpressiveCodeConfig,
 	LicenseConfig,
@@ -6,7 +7,6 @@ import type {
 	SiteConfig,
 } from "./types/config";
 import { LinkPreset } from "./types/config";
-import { getCachedRuntimeConfig } from "./server/config-cache";
 
 const runtimeConfig = getCachedRuntimeConfig();
 
@@ -21,7 +21,7 @@ export const siteConfig: SiteConfig = {
 		},
 		banner: {
 			enable: true,
-			src: "assets/images/demo-banner.png",
+			src: "assets/images/default-banner.png",
 			position: "center",
 			credit: {
 				enable: false,
@@ -42,17 +42,16 @@ export const siteConfig: SiteConfig = {
 };
 
 export const navBarConfig: NavBarConfig = {
-	links:
-		runtimeConfig?.navBarConfig.links || [
-			LinkPreset.Home,
-			LinkPreset.Archive,
-			LinkPreset.About,
-		],
+	links: runtimeConfig?.navBarConfig.links || [
+		LinkPreset.Home,
+		LinkPreset.Archive,
+		LinkPreset.About,
+	],
 };
 
 export const profileConfig: ProfileConfig = {
 	...(runtimeConfig?.profileConfig || {
-		avatar: "assets/images/demo-avatar.png",
+		avatar: "assets/images/default-avatar.png",
 		name: "Corvusx",
 		bio: "记录代码、设计、想法与长期项目。",
 		links: [],
