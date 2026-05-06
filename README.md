@@ -32,7 +32,8 @@ pnpm preview
    * 默认密码：admin123456
 ```
 
-通过后台管理面板或本地配置文件自定义博客 
+1. 通过后台管理面板或本地配置文件(`src/config.ts`)自定义博客
+2. 执行 `pnpm new-post <filename>` 创建新文章，并在 `src/content/posts/` 目录中编辑（可通过后台管理面板创建/编辑文章）
 
 ## 🧩 Markdown 扩展语法
 
@@ -60,12 +61,12 @@ pnpm preview
 - 文章内容：`src/content/posts/`
 - 站点外观：`src/components/` 与 `src/layouts/`
 
+
 ## 部署前
 
 部署前请设置 `SITE` 环境变量，用来生成正确的 RSS、`robots.txt` 和 `sitemap` 地址。
-
 ```sh
 SITE=https://your-domain.com
 ```
-
 如果你不想使用环境变量，也可以直接修改 `astro.config.mjs` 里的 `site` 配置。
+参考[官方指南](https://docs.astro.build/zh-cn/guides/deploy/)将博客部署至 Vercel, Netlify, GitHub Pages 等；部署前需编辑 `astro.config.mjs` 中的站点设置
