@@ -93,19 +93,11 @@ const bannerOffset =
 >
 	<head>
 		<style is:inline>
-			/* Nuclear Fix for Twikoo Flicker: Absolutely hide until fully loaded AND themed */
-			#tcomment:not(.twikoo-loaded) {
-				display: none !important;
-				opacity: 0 !important;
-				visibility: hidden !important;
-			}
-			#tcomment.twikoo-loaded {
-				display: block !important;
-				animation: twikoo-fade-in 0.5s ease forwards;
-			}
-			@keyframes twikoo-fade-in {
-				from { opacity: 0; transform: translateY(15px); }
-				to { opacity: 1; transform: translateY(0); }
+			/* Nuclear Fix for Twikoo Flicker: The container itself is now dynamic, 
+			   we just ensure the placeholder area transitions smoothly */
+			#tcomment-placeholder {
+				min-height: 100px;
+				transition: opacity 0.5s ease;
 			}
 		</style>
 
@@ -416,39 +408,44 @@ function init() {
 
 function initTwikoo() {
 	if (!window.twikooEnable || !window.twikooEnvId) return;
-	const el = document.getElementById('tcomment');
-	if (!el) return;
+	const placeholder = document.getElementById('tcomment-placeholder');
+	if (!placeholder) return;
 	
-	// Reset state if it's a new element or during SPA transition
-	if (el.dataset.twikooStatus === 'loaded' && el.classList.contains('twikoo-loaded')) {
-		return;
-	}
+	// If already being handled, skip
+	if (placeholder.dataset.twikooStatus === 'initializing') return;
 
-	const path = el.dataset.twikooPath || window.location.pathname;
+	const path = placeholder.dataset.twikooPath || window.location.pathname;
 	
 	if (typeof twikoo !== 'undefined') {
-		el.dataset.twikooStatus = 'loading';
+		placeholder.dataset.twikooStatus = 'initializing';
+		
+		// Create the real container only now
+		const realContainer = document.createElement('div');
+		realContainer.id = 'tcomment';
+		realContainer.style.opacity = '0';
+		realContainer.style.transition = 'opacity 0.5s ease-in-out';
+		placeholder.appendChild(realContainer);
+
 		twikoo.init({
 			envId: window.twikooEnvId,
 			el: '#tcomment',
 			path: path,
 			onCommentLoaded: function() {
-				// Use requestAnimationFrame to ensure the browser has parsed the injected CSS
-				requestAnimationFrame(() => {
-					setTimeout(() => {
-						el.classList.add('twikoo-loaded');
-						el.dataset.twikooStatus = 'loaded';
-					}, 100); 
-				});
+				// Wait for Twikoo to finish injecting its own styles and content
+				setTimeout(() => {
+					realContainer.style.opacity = '1';
+					placeholder.classList.add('twikoo-loaded');
+				}, 300);
 			}
 		});
-		// Fallback for visual state (increase to 2s to be safe)
+
+		// Absolute fallback
 		setTimeout(() => {
-			if (el && !el.classList.contains('twikoo-loaded')) {
-				el.classList.add('twikoo-loaded');
-				el.dataset.twikooStatus = 'loaded';
+			if (realContainer.style.opacity === '0') {
+				realContainer.style.opacity = '1';
+				placeholder.classList.add('twikoo-loaded');
 			}
-		}, 2000);
+		}, 3000);
 	} else {
 		setTimeout(initTwikoo, 200);
 	}
