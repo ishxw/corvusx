@@ -143,22 +143,3 @@
 .custom-md spoiler {
   @apply bg-black/10 dark:bg-white/10 text-transparent hover:bg-transparent hover:text-inherit px-1 py-0.5 overflow-hidden rounded-md transition-all duration-300 cursor-help;
 }
-
-/* Twikoo Loading Fix: Suppress flicker during SPA navigation */
-#tcomment {
-    opacity: 0;
-    visibility: hidden;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
-}
-#tcomment.twikoo-loaded {
-    opacity: 1 !important;
-    visibility: visible !important;
-    max-height: none !important;
-    overflow: visible !important;
-}
-/* Ensure internal loading circles or placeholders never show before ready */
-#tcomment:not(.twikoo-loaded) * {
-    display: none !important;
-}

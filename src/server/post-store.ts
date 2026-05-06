@@ -29,15 +29,18 @@ function normalizeFrontmatterDate(value: string | Date | undefined): string | un
 		return value.toISOString().slice(0, 10);
 	}
 
-	const trimmed = value.trim();
+	const trimmed = String(value).trim();
 	if (!trimmed) return undefined;
 
+	// Check if already in YYYY-MM-DD format
+	if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+
 	const parsed = new Date(trimmed);
-	if (!Number.isNaN(parsed.getTime()) && /^\d{4}-\d{2}-\d{2}/.test(trimmed) === false) {
+	if (!Number.isNaN(parsed.getTime())) {
 		return parsed.toISOString().slice(0, 10);
 	}
 
-	return trimmed;
+	return undefined;
 }
 
 function normalizeDateTime(value: string | Date | undefined): string | undefined {

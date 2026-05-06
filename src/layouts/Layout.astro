@@ -157,6 +157,20 @@ const bannerOffset =
 			window.twikooEnvId = twikooEnvId;
 			window.twikooEnable = twikooEnable;
 		</script>
+		<style is:inline>
+			/* Nuclear Fix for Twikoo Flicker: Absolutely hide until fully loaded */
+			#tcomment:not(.twikoo-loaded) {
+				display: none !important;
+			}
+			#tcomment.twikoo-loaded {
+				display: block !important;
+				animation: twikoo-fade-in 0.4s ease forwards;
+			}
+			@keyframes twikoo-fade-in {
+				from { opacity: 0; transform: translateY(10px); }
+				to { opacity: 1; transform: translateY(0); }
+			}
+		</style>
 		<style define:vars={{
 			configHue,
 			'page-width': `${PAGE_WIDTH}rem`,
