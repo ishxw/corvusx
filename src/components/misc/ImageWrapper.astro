@@ -55,7 +55,7 @@ if (isLocal) {
 }
 
 const imageClass = "w-full h-full object-cover";
-const imageStyle = { objectPosition: position };
+const imageStyle = `object-position: ${position}`;
 ---
 <div id={id} class:list={[className, 'overflow-hidden relative bg-black/5 dark:bg-white/5']}>
     <div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
