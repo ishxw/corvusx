@@ -45,9 +45,20 @@ function formatDate(value: string): string {
 	}
 }
 
+function decodeMediaPath(value: string): string {
+	try {
+		return decodeURIComponent(value);
+	} catch {
+		return value;
+	}
+}
+
 function initAdminMediaPicker(options: MediaPickerOptions) {
 	const modal = document.getElementById(options.modalId);
-	if (!(modal instanceof HTMLDivElement) || modal.dataset.initialized === "true") {
+	if (
+		!(modal instanceof HTMLDivElement) ||
+		modal.dataset.initialized === "true"
+	) {
 		return;
 	}
 	modal.dataset.initialized = "true";
@@ -58,11 +69,20 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 	const count = modal.querySelector<HTMLElement>("[data-media-count]");
 	const title = modal.querySelector<HTMLElement>("[data-media-picker-title]");
 	const toast = modal.querySelector<HTMLElement>("[data-media-toast]");
-	const searchInput = modal.querySelector<HTMLInputElement>("[data-media-search]");
-	const sortSelect = modal.querySelector<HTMLSelectElement>("[data-media-sort]");
-	const uploadForm = modal.querySelector<HTMLFormElement>("[data-media-upload-form]");
-	const uploadInput = modal.querySelector<HTMLInputElement>("[data-media-upload-input]");
-	const uploadSubmit = modal.querySelector<HTMLButtonElement>("[data-media-upload-submit]");
+	const searchInput = modal.querySelector<HTMLInputElement>(
+		"[data-media-search]",
+	);
+	const sortSelect =
+		modal.querySelector<HTMLSelectElement>("[data-media-sort]");
+	const uploadForm = modal.querySelector<HTMLFormElement>(
+		"[data-media-upload-form]",
+	);
+	const uploadInput = modal.querySelector<HTMLInputElement>(
+		"[data-media-upload-input]",
+	);
+	const uploadSubmit = modal.querySelector<HTMLButtonElement>(
+		"[data-media-upload-submit]",
+	);
 
 	if (
 		!(grid instanceof HTMLDivElement) ||
@@ -90,7 +110,10 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 		status.textContent = message;
 	};
 
-	const showToast = (message: string, tone: "success" | "warning" = "success") => {
+	const showToast = (
+		message: string,
+		tone: "success" | "warning" = "success",
+	) => {
 		if (!(toast instanceof HTMLElement)) return;
 		toast.textContent = message;
 		toast.className =
@@ -162,7 +185,8 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 						cache: "no-store",
 					},
 				);
-				if (!response.ok) throw new Error(`Resolve preview failed: ${response.status}`);
+				if (!response.ok)
+					throw new Error(`Resolve preview failed: ${response.status}`);
 				const payload = (await response.json()) as {
 					value?: string;
 					isResolvable?: boolean;
@@ -227,10 +251,9 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 		}
 
 		grid.innerHTML = items
-			.map(
-				(item) => {
-					const cleanUrl = item.url.split('?')[0];
-					return `
+			.map((item) => {
+				const cleanUrl = decodeMediaPath(item.url.split("?")[0]);
+				return `
 						<div class="group flex flex-col rounded-3xl border border-black/5 bg-black/[0.02] p-3 transition-all hover:bg-white hover:shadow-xl dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-black/40">
 							<div class="relative mb-3 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 dark:bg-white/5">
 								<img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.name)}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
@@ -253,8 +276,7 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 							</div>
 						</div>
 					`;
-				}
-			)
+			})
 			.join("");
 	};
 
@@ -267,7 +289,8 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 				},
 				cache: "no-store",
 			});
-			if (!response.ok) throw new Error(`Media API returned ${response.status}`);
+			if (!response.ok)
+				throw new Error(`Media API returned ${response.status}`);
 			const payload = (await response.json()) as { items?: MediaItem[] };
 			allItems = payload.items || [];
 			renderItems();
@@ -302,7 +325,9 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				const container = uploadForm.querySelector(".relative.flex.min-h-\\[120px\\]");
+				const container = uploadForm.querySelector(
+					".relative.flex.min-h-\\[120px\\]",
+				);
 				if (container instanceof HTMLElement) {
 					// Clear previous preview if any
 					const oldPreview = container.querySelector("[data-preview-image]");
@@ -314,11 +339,13 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 
 					const img = document.createElement("img");
 					img.src = e.target?.result as string;
-					img.className = "absolute inset-0 h-full w-full object-cover rounded-2xl opacity-40 pointer-events-none";
+					img.className =
+						"absolute inset-0 h-full w-full object-cover rounded-2xl opacity-40 pointer-events-none";
 					img.setAttribute("data-preview-image", "");
-					
+
 					const text = document.createElement("div");
-					text.className = "relative z-10 px-4 text-center text-[10px] font-black uppercase tracking-wider text-black/60 dark:text-white/80 pointer-events-none";
+					text.className =
+						"relative z-10 px-4 text-center text-[10px] font-black uppercase tracking-wider text-black/60 dark:text-white/80 pointer-events-none";
 					text.textContent = `已选择：${file.name}`;
 					text.setAttribute("data-preview-text", "");
 
@@ -349,9 +376,11 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 				body: formData,
 			});
 			if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
-			
+
 			// Restore upload area
-			const container = uploadForm.querySelector(".relative.flex.min-h-\\[120px\\]");
+			const container = uploadForm.querySelector(
+				".relative.flex.min-h-\\[120px\\]",
+			);
 			if (container instanceof HTMLElement) {
 				container.querySelector("[data-preview-image]")?.remove();
 				container.querySelector("[data-preview-text]")?.remove();
@@ -372,7 +401,9 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 
 	const deleteMedia = async (value: string) => {
 		if (!value) return;
-		const confirmed = await window.showAdminConfirm?.(`确认删除素材 ${value} 吗？此操作不可撤销。`);
+		const confirmed = await window.showAdminConfirm?.(
+			`确认删除素材 ${value} 吗？此操作不可撤销。`,
+		);
 		if (!confirmed) return;
 		setStatus("正在删除素材…");
 
@@ -468,14 +499,16 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 	searchInput.addEventListener("input", renderItems);
 	sortSelect.addEventListener("change", renderItems);
 
-	document.querySelectorAll<HTMLInputElement>("[data-media-input]").forEach((input) => {
-		input.addEventListener("input", () => {
-			void syncMediaPreviews();
+	document
+		.querySelectorAll<HTMLInputElement>("[data-media-input]")
+		.forEach((input) => {
+			input.addEventListener("input", () => {
+				void syncMediaPreviews();
+			});
+			input.addEventListener("change", () => {
+				void syncMediaPreviews();
+			});
 		});
-		input.addEventListener("change", () => {
-			void syncMediaPreviews();
-		});
-	});
 
 	void syncMediaPreviews();
 }
@@ -483,14 +516,16 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 window.initAdminMediaPicker = initAdminMediaPicker;
 
 function bootMediaPickers() {
-	document.querySelectorAll<HTMLElement>("[data-media-picker-modal]").forEach((modal) => {
-		const modalId = modal.id;
-		if (!modalId) return;
-		window.initAdminMediaPicker?.({
-			modalId,
-			endpoint: "/admin/api/media/",
+	document
+		.querySelectorAll<HTMLElement>("[data-media-picker-modal]")
+		.forEach((modal) => {
+			const modalId = modal.id;
+			if (!modalId) return;
+			window.initAdminMediaPicker?.({
+				modalId,
+				endpoint: "/admin/api/media/",
+			});
 		});
-	});
 }
 
 if (document.readyState === "loading") {

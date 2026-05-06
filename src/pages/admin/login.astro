@@ -7,6 +7,7 @@ import {
 	LIGHT_MODE,
 } from "@/constants/constants";
 import { defaultFavicons } from "@/constants/icon";
+import { resolveFavicons } from "@/server/favicon";
 import { getRuntimeState } from "@/server/runtime-state";
 import type { Favicon } from "@/types/config";
 import { url } from "@/utils/url-utils";
@@ -24,8 +25,11 @@ if (error === "invalid" || error === "1") {
 const { siteConfig: runtimeSiteConfig } = await getRuntimeState();
 const activeSiteConfig = runtimeSiteConfig || siteConfig;
 const siteTitle = activeSiteConfig.title || "Corvusx";
-const favicons: Favicon[] =
-	activeSiteConfig.favicon.length > 0 ? activeSiteConfig.favicon : defaultFavicons;
+const rawFavicons: Favicon[] =
+	activeSiteConfig.favicon.length > 0
+		? activeSiteConfig.favicon
+		: defaultFavicons;
+const favicons = await resolveFavicons(rawFavicons);
 ---
 
 <!DOCTYPE html>
@@ -40,7 +44,8 @@ const favicons: Favicon[] =
 		{favicons.map((favicon) => (
 			<link
 				rel="icon"
-				href={favicon.src.startsWith("/") ? url(favicon.src) : favicon.src}
+				href={favicon.href.startsWith("/") ? url(favicon.href) : favicon.href}
+				type={favicon.type}
 				sizes={favicon.sizes}
 				media={favicon.theme && `(prefers-color-scheme: ${favicon.theme})`}
 			/>

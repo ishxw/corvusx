@@ -8,8 +8,9 @@ import "@/styles/markdown.css";
 import "@/styles/markdown-extend.styl";
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
-import { getRuntimeState } from "@/server/runtime-state";
 import { defaultFavicons } from "@/constants/icon";
+import { resolveFavicons } from "@/server/favicon";
+import { getRuntimeState } from "@/server/runtime-state";
 import type { Favicon } from "@/types/config";
 import { url } from "@/utils/url-utils";
 
@@ -31,10 +32,8 @@ const {
 	error = null,
 } = Astro.props;
 
-const {
-	siteConfig: runtimeSiteConfig,
-	profileConfig: runtimeProfileConfig,
-} = await getRuntimeState();
+const { siteConfig: runtimeSiteConfig, profileConfig: runtimeProfileConfig } =
+	await getRuntimeState();
 
 const activeSiteConfig = runtimeSiteConfig || siteConfig;
 const activeProfileConfig = runtimeProfileConfig || profileConfig;
@@ -42,8 +41,11 @@ const configHue = activeSiteConfig.themeColor.hue;
 const siteLang = activeSiteConfig.lang.replace("_", "-");
 const siteTitle = activeSiteConfig.title || "Corvusx";
 const pageTitle = `${title} - ${siteTitle} 控制台`;
-const favicons: Favicon[] =
-	activeSiteConfig.favicon.length > 0 ? activeSiteConfig.favicon : defaultFavicons;
+const rawFavicons: Favicon[] =
+	activeSiteConfig.favicon.length > 0
+		? activeSiteConfig.favicon
+		: defaultFavicons;
+const favicons = await resolveFavicons(rawFavicons);
 ---
 
 <!DOCTYPE html>
@@ -56,7 +58,8 @@ const favicons: Favicon[] =
 		{favicons.map((favicon) => (
 			<link
 				rel="icon"
-				href={favicon.src.startsWith("/") ? url(favicon.src) : favicon.src}
+				href={favicon.href.startsWith("/") ? url(favicon.href) : favicon.href}
+				type={favicon.type}
 				sizes={favicon.sizes}
 				media={favicon.theme && `(prefers-color-scheme: ${favicon.theme})`}
 			/>
@@ -92,15 +95,118 @@ const favicons: Favicon[] =
 		<script is:inline>
 			// Scroll Restoration Logic
 			(function() {
-				const scrollKey = `admin_scroll_${window.location.pathname}`;
-				window.addEventListener('beforeunload', () => {
-					sessionStorage.setItem(scrollKey, window.scrollY);
-				});
-				const savedScroll = sessionStorage.getItem(scrollKey);
-				if (savedScroll) {
-					window.scrollTo(0, parseInt(savedScroll));
-					sessionStorage.removeItem(scrollKey);
+				const scrollKey = 'corvusx_admin_scroll_state_v2';
+				const maxAgeMs = 5 * 60 * 1000;
+				const maxWaitMs = 1500;
+				const stableFrameCount = 4;
+
+				if ('scrollRestoration' in history) {
+					history.scrollRestoration = 'manual';
 				}
+
+				const getScrollMetrics = () => {
+					const doc = document.documentElement;
+					const maxScroll = Math.max(0, doc.scrollHeight - window.innerHeight);
+					const scrollY = window.scrollY || doc.scrollTop || 0;
+					return {
+						scrollY,
+						maxScroll,
+						ratio: maxScroll > 0 ? scrollY / maxScroll : 0,
+					};
+				};
+
+				const saveScrollState = () => {
+					const metrics = getScrollMetrics();
+					sessionStorage.setItem(
+						scrollKey,
+						JSON.stringify({
+							path: window.location.pathname,
+							scrollY: metrics.scrollY,
+							maxScroll: metrics.maxScroll,
+							ratio: metrics.ratio,
+							timestamp: Date.now(),
+						}),
+					);
+				};
+
+				const readScrollState = () => {
+					try {
+						const raw = sessionStorage.getItem(scrollKey);
+						if (!raw) return null;
+						const parsed = JSON.parse(raw);
+						if (!parsed || typeof parsed !== 'object') return null;
+						return parsed;
+					} catch {
+						return null;
+					}
+				};
+
+				const savedState = readScrollState();
+				if (
+					savedState &&
+					savedState.path === window.location.pathname &&
+					typeof savedState.timestamp === 'number' &&
+					Date.now() - savedState.timestamp <= maxAgeMs
+				) {
+					let lastHeight = -1;
+					let stableFrames = 0;
+					let restored = false;
+					const startedAt = performance.now();
+
+					const restoreScroll = () => {
+						if (restored) return;
+						const metrics = getScrollMetrics();
+						const target =
+							typeof savedState.maxScroll === 'number' && savedState.maxScroll > 0
+								? Math.round((savedState.ratio || 0) * metrics.maxScroll)
+								: Math.max(0, Number(savedState.scrollY) || 0);
+						window.scrollTo(0, Math.min(target, metrics.maxScroll));
+						restored = true;
+						sessionStorage.removeItem(scrollKey);
+					};
+
+					const waitForStableLayout = () => {
+						if (restored) return;
+						const currentHeight = document.documentElement.scrollHeight;
+						if (currentHeight === lastHeight) {
+							stableFrames += 1;
+						} else {
+							lastHeight = currentHeight;
+							stableFrames = 0;
+						}
+
+						const elapsed = performance.now() - startedAt;
+						if (stableFrames >= stableFrameCount || elapsed >= maxWaitMs) {
+							restoreScroll();
+							return;
+						}
+
+						requestAnimationFrame(waitForStableLayout);
+					};
+
+					requestAnimationFrame(waitForStableLayout);
+					window.addEventListener('load', restoreScroll, { once: true });
+				}
+
+				window.addEventListener('beforeunload', saveScrollState);
+				window.addEventListener('pagehide', saveScrollState);
+				document.addEventListener(
+					'submit',
+					() => {
+						saveScrollState();
+					},
+					true,
+				);
+				document.addEventListener(
+					'click',
+					(event) => {
+						const link = event.target.closest('a');
+						if (!(link instanceof HTMLAnchorElement)) return;
+						if (link.origin !== window.location.origin) return;
+						saveScrollState();
+					},
+					true,
+				);
 			})();
 		</script>
 

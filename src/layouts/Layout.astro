@@ -14,6 +14,7 @@ import "@/styles/expressive-code.css";
 
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
+import { resolveFavicons } from "@/server/favicon";
 import { getRuntimeState } from "@/server/runtime-state";
 import {
 	AUTO_MODE,
@@ -69,8 +70,11 @@ if (title) {
 	pageTitle = `${activeSiteConfig.title} - ${activeSiteConfig.subtitle}`;
 }
 
-const favicons: Favicon[] =
-	activeSiteConfig.favicon.length > 0 ? activeSiteConfig.favicon : defaultFavicons;
+const rawFavicons: Favicon[] =
+	activeSiteConfig.favicon.length > 0
+		? activeSiteConfig.favicon
+		: defaultFavicons;
+const favicons = await resolveFavicons(rawFavicons);
 
 // const siteLang = siteConfig.lang.replace('_', '-')
 if (!lang) {
@@ -127,7 +131,8 @@ const bannerOffset =
 		<meta name="generator" content={Astro.generator} />
 		{favicons.map(favicon => (
 			<link rel="icon"
-				  href={favicon.src.startsWith('/') ? url(favicon.src) : favicon.src}
+				  href={favicon.href.startsWith('/') ? url(favicon.href) : favicon.href}
+				  type={favicon.type}
 				  sizes={favicon.sizes}
 				  media={favicon.theme && `(prefers-color-scheme: ${favicon.theme})`}
 			/>
@@ -176,7 +181,8 @@ const bannerOffset =
 
 		<link rel="alternate" type="application/rss+xml" title={activeProfileConfig.name} href={`${Astro.site}rss.xml`}/>
 
-		{activeTwikooConfig.enable && <script is:inline src="https://cdn.staticfile.org/twikoo/1.6.39/twikoo.all.min.js"></script>}
+		{activeTwikooConfig.enable && <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/twikoo@1.6.39/dist/twikoo.min.css" />}
+		{activeTwikooConfig.enable && <script is:inline src="https://cdn.staticfile.org/twikoo/1.6.39/twikoo.nocss.min.js"></script>}
 	</head>
 	<body class=" min-h-screen transition " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner}]}
 		  data-overlayscrollbars-initialize
@@ -411,6 +417,14 @@ function initTwikoo() {
 init();
 
 const setup = () => {
+	// Keep dynamically-added styles/scripts across Swup page swaps.
+	// This prevents component-scoped styles (e.g. Svelte widgets in navbar) from disappearing after navigation.
+	const headPlugin = window.swup?.findPlugin?.('SwupHeadPlugin');
+	if (headPlugin?.options) {
+		headPlugin.options.persistAssets = true;
+		headPlugin.options.persistTags = 'link[rel=stylesheet], script[src], style';
+	}
+
 	// TODO: temp solution to change the height of the banner
 /*
 	window.swup.hooks.on('animation:out:start', () => {

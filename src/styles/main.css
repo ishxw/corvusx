@@ -116,6 +116,66 @@
     @apply cursor-zoom-in
 }
 
+.dark #tcomment,
+.dark #tcomment-placeholder {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.dark #tcomment .tk-comments-title,
+.dark #tcomment .tk-comments-count,
+.dark #tcomment .tk-login-title,
+.dark #tcomment .tk-panel-title,
+.dark #tcomment .tk-content,
+.dark #tcomment .tk-extra-text,
+.dark #tcomment .tk-error-message {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.dark #tcomment .tk-meta,
+.dark #tcomment .tk-action-link,
+.dark #tcomment .tk-expand,
+.dark #tcomment .tk-replies-expand,
+.dark #tcomment .tk-comments-no,
+.dark #tcomment .tk-login-msg,
+.dark #tcomment .tk-nick-link {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.dark #tcomment .tk-comment,
+.dark #tcomment .tk-replies,
+.dark #tcomment .tk-preview-container,
+.dark #tcomment .tk-panel {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark #tcomment .tk-input,
+.dark #tcomment .tk-meta-input,
+.dark #tcomment .el-textarea__inner,
+.dark #tcomment .el-input__inner {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.86);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark #tcomment .tk-input::placeholder,
+.dark #tcomment .tk-meta-input::placeholder,
+.dark #tcomment .el-textarea__inner::placeholder,
+.dark #tcomment .el-input__inner::placeholder {
+    color: rgba(255, 255, 255, 0.34);
+}
+
+.dark #tcomment .tk-submit,
+.dark #tcomment .el-button {
+    color: rgba(255, 255, 255, 0.86);
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.dark #tcomment .tk-submit:hover,
+.dark #tcomment .el-button:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
 ::selection {
     background-color: var(--selection-bg)
 }

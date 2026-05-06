@@ -1,6 +1,10 @@
 import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
-import { deleteAdminPost, getAdminPost, saveAdminPost } from "@/server/post-store";
+import {
+	deleteAdminPost,
+	getAdminPost,
+	saveAdminPost,
+} from "@/server/post-store";
 
 type BatchAction =
 	| "publish"
@@ -22,19 +26,36 @@ function buildRedirect(params: {
 	status?: string;
 	sort?: string;
 	query?: string;
+	page?: string;
+	pageSize?: string;
 }): string {
 	const search = new URLSearchParams();
 	if (params.success) search.set("success", params.success);
 	if (params.error) search.set("error", params.error);
-	if (typeof params.count === "number") search.set("count", String(params.count));
-	if (params.status && params.status !== "all") search.set("status", params.status);
-	if (params.sort && params.sort !== "published-desc") search.set("sort", params.sort);
+	if (typeof params.count === "number") {
+		search.set("count", String(params.count));
+	}
+	if (params.status && params.status !== "all") {
+		search.set("status", params.status);
+	}
+	if (params.sort && params.sort !== "published-desc") {
+		search.set("sort", params.sort);
+	}
 	if (params.query) search.set("q", params.query);
+	if (params.page && params.page !== "1") {
+		search.set("page", params.page);
+	}
+	if (params.pageSize && params.pageSize !== "10") {
+		search.set("pageSize", params.pageSize);
+	}
 	const queryString = search.toString();
 	return queryString ? `/admin/?${queryString}` : "/admin/";
 }
 
-async function updateDraftState(slug: string, draft: boolean): Promise<boolean> {
+async function updateDraftState(
+	slug: string,
+	draft: boolean,
+): Promise<boolean> {
 	const post = await getAdminPost(slug);
 	if (!post) return false;
 	if (post.draft !== draft) {
@@ -72,7 +93,10 @@ async function deletePosts(slugs: string[]): Promise<number> {
 	return count;
 }
 
-async function updateCategory(slugs: string[], category: string): Promise<number> {
+async function updateCategory(
+	slugs: string[],
+	category: string,
+): Promise<number> {
 	let count = 0;
 	for (const slug of slugs) {
 		const post = await getAdminPost(slug);
@@ -98,7 +122,10 @@ async function updateTags(slugs: string[], tags: string[]): Promise<number> {
 	return count;
 }
 
-async function updatePublishedDate(slugs: string[], published: string): Promise<number> {
+async function updatePublishedDate(
+	slugs: string[],
+	published: string,
+): Promise<number> {
 	if (!published) return 0;
 	let count = 0;
 	for (const slug of slugs) {
@@ -112,7 +139,10 @@ async function updatePublishedDate(slugs: string[], published: string): Promise<
 	return count;
 }
 
-async function updatePublishAt(slugs: string[], publishAt: string): Promise<number> {
+async function updatePublishAt(
+	slugs: string[],
+	publishAt: string,
+): Promise<number> {
 	let count = 0;
 	for (const slug of slugs) {
 		const post = await getAdminPost(slug);
@@ -135,6 +165,8 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 	const status = String(form.get("status") || "all");
 	const sort = String(form.get("sort") || "published-desc");
 	const query = String(form.get("q") || "").trim();
+	const page = String(form.get("page") || "1");
+	const pageSize = String(form.get("pageSize") || "10");
 	const category = String(form.get("category") || "").trim();
 	const published = String(form.get("published") || "").trim();
 	const publishAt = String(form.get("publishAt") || "").trim();
@@ -153,7 +185,16 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 	);
 
 	if (slugs.length === 0) {
-		return redirect(buildRedirect({ error: "no-selection", status, sort, query }));
+		return redirect(
+			buildRedirect({
+				error: "no-selection",
+				status,
+				sort,
+				query,
+				page,
+				pageSize,
+			}),
+		);
 	}
 
 	let success = "";
@@ -182,13 +223,33 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 			count = await updatePublishAt(slugs, publishAt);
 			success = "scheduled";
 		} else {
-			return redirect(buildRedirect({ error: "invalid-action", status, sort, query }));
+			return redirect(
+				buildRedirect({
+					error: "invalid-action",
+					status,
+					sort,
+					query,
+					page,
+					pageSize,
+				}),
+			);
 		}
 	} catch (e) {
 		console.error("[BATCH-ACTION] Error:", e);
-		return redirect(buildRedirect({ error: "batch-failed", status, sort, query }));
+		return redirect(
+			buildRedirect({
+				error: "batch-failed",
+				status,
+				sort,
+				query,
+				page,
+				pageSize,
+			}),
+		);
 	}
 
 	await logAdminActivity("post:batch", `${action} × ${count}`);
-	return redirect(buildRedirect({ success, count, status, sort, query }));
+	return redirect(
+		buildRedirect({ success, count, status, sort, query, page, pageSize }),
+	);
 };

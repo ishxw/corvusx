@@ -1,45 +1,75 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { AdminSiteSettings } from "@/types/admin";
 import { defaultSiteSettings } from "./defaults";
 import { DATA_DIR, SITE_SETTINGS_PATH } from "./paths";
-import type { AdminSiteSettings } from "@/types/admin";
 
 async function ensureDir(dir: string) {
 	await fs.mkdir(dir, { recursive: true });
 }
 
 let cachedSettings: AdminSiteSettings | null = null;
+let cachedSettingsMtimeMs: number | null = null;
+
+async function getSiteSettingsMtimeMs(): Promise<number | null> {
+	try {
+		const stats = await fs.stat(SITE_SETTINGS_PATH);
+		return stats.mtimeMs;
+	} catch {
+		return null;
+	}
+}
+
+function normalizeSiteSettings(
+	parsed: Partial<AdminSiteSettings>,
+): AdminSiteSettings {
+	const bannerPosition =
+		parsed.bannerPosition === "center"
+			? "center"
+			: parsed.bannerPosition === "bottom"
+				? "bottom"
+				: "top";
+	const faviconSrc =
+		parsed.faviconSrc === "public/favicon/corvusx.svg"
+			? "/favicon/corvusx.svg"
+			: (parsed.faviconSrc?.trim() || defaultSiteSettings.faviconSrc);
+
+	return {
+		...defaultSiteSettings,
+		...parsed,
+		bannerPosition,
+		faviconSrc,
+		profileLinks: parsed.profileLinks ?? defaultSiteSettings.profileLinks,
+		navLinks: parsed.navLinks ?? defaultSiteSettings.navLinks,
+	};
+}
 
 export async function getSiteSettings(): Promise<AdminSiteSettings> {
-	if (cachedSettings) return cachedSettings;
+	const currentMtimeMs = await getSiteSettingsMtimeMs();
+	if (
+		cachedSettings &&
+		cachedSettingsMtimeMs !== null &&
+		currentMtimeMs !== null &&
+		cachedSettingsMtimeMs === currentMtimeMs
+	) {
+		return cachedSettings;
+	}
 	try {
 		const raw = await fs.readFile(SITE_SETTINGS_PATH, "utf8");
 		const parsed = JSON.parse(raw) as Partial<AdminSiteSettings>;
-		const bannerPosition =
-			parsed.bannerPosition === "center"
-				? "center"
-				: parsed.bannerPosition === "bottom"
-					? "bottom"
-					: "top";
-		const faviconSrc =
-			parsed.faviconSrc === "public/favicon/corvusx.svg"
-				? "/favicon/corvusx.svg"
-				: parsed.faviconSrc ?? defaultSiteSettings.faviconSrc;
-		cachedSettings = {
-			...defaultSiteSettings,
-			...parsed,
-			bannerPosition,
-			faviconSrc,
-			profileLinks: parsed.profileLinks ?? defaultSiteSettings.profileLinks,
-			navLinks: parsed.navLinks ?? defaultSiteSettings.navLinks,
-		};
+		cachedSettings = normalizeSiteSettings(parsed);
+		cachedSettingsMtimeMs = currentMtimeMs ?? (await getSiteSettingsMtimeMs());
 		return cachedSettings;
 	} catch {
+		cachedSettings = defaultSiteSettings;
+		cachedSettingsMtimeMs = null;
 		return defaultSiteSettings;
 	}
 }
 
-export async function saveSiteSettings(settings: AdminSiteSettings): Promise<void> {
+export async function saveSiteSettings(
+	settings: AdminSiteSettings,
+): Promise<void> {
 	await ensureDir(DATA_DIR);
 	await fs.writeFile(
 		SITE_SETTINGS_PATH,
@@ -47,6 +77,7 @@ export async function saveSiteSettings(settings: AdminSiteSettings): Promise<voi
 		"utf8",
 	);
 	cachedSettings = settings;
+	cachedSettingsMtimeMs = await getSiteSettingsMtimeMs();
 }
 
 export function getDataRelativePath(filePath: string): string {

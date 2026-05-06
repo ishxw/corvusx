@@ -6,10 +6,10 @@ import Twikoo from "@components/misc/Twikoo.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { getDir, getPostUrlBySlug } from "@utils/url-utils";
+import { Icon } from "astro-icon/components";
 import { getRuntimeRenderedPostBySlug } from "@/server/public-posts";
 import { getRuntimeState } from "@/server/runtime-state";
-import { getPostUrlBySlug, getDir } from "@utils/url-utils";
-import { Icon } from "astro-icon/components";
 import ImageWrapper from "../../components/misc/ImageWrapper.astro";
 import PostMetadata from "../../components/PostMeta.astro";
 import { formatDateToYYYYMMDD } from "../../utils/date-utils";
@@ -24,7 +24,8 @@ if (!entry) {
 	return Astro.redirect("/");
 }
 
-const { profileConfig, siteConfig, licenseConfig, twikooConfig } = await getRuntimeState();
+const { profileConfig, siteConfig, licenseConfig, twikooConfig } =
+	await getRuntimeState();
 
 const jsonLd = {
 	"@context": "https://schema.org",
@@ -119,7 +120,9 @@ const jsonLd = {
         </a>
     </div>
 
-    <div class="card-base px-6 md:px-9 py-6">
-        <Twikoo path={entry.slug} config={twikooConfig} />
-    </div>
+    {twikooConfig.enable && (
+        <div class="card-base px-6 md:px-9 py-6">
+            <Twikoo path={entry.slug} config={twikooConfig} />
+        </div>
+    )}
 </MainGridLayout>

@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
+import { defaultSiteSettings } from "@/server/defaults";
 import { getSiteSettings, saveSiteSettings } from "@/server/site-store";
 
 function clampThemeHue(value: number, fallback: number): number {
@@ -14,19 +15,28 @@ function parseTocDepth(value: string, fallback: 1 | 2 | 3): 1 | 2 | 3 {
 	return fallback;
 }
 
-function parseBannerMode(value: string, fallback: "top" | "center" | "bottom"): "top" | "center" | "bottom" {
+function parseBannerMode(
+	value: string,
+	fallback: "top" | "center" | "bottom",
+): "top" | "center" | "bottom" {
 	if (value === "top" || value === "center" || value === "bottom") {
 		return value;
 	}
 	return fallback;
 }
 
-function normalizeText(value: FormDataEntryValue | null, fallback: string): string {
+function normalizeText(
+	value: FormDataEntryValue | null,
+	fallback: string,
+): string {
 	const normalized = String(value ?? "").trim();
 	return normalized || fallback;
 }
 
-function normalizeOptionalText(value: FormDataEntryValue | null, fallback = ""): string {
+function normalizeOptionalText(
+	value: FormDataEntryValue | null,
+	fallback = "",
+): string {
 	const normalized = String(value ?? "").trim();
 	return normalized || fallback;
 }
@@ -99,19 +109,48 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 			title: normalizeText(form.get("title"), current.title),
 			subtitle: normalizeOptionalText(form.get("subtitle"), current.subtitle),
 			lang: normalizeText(form.get("lang"), current.lang),
-			themeHue: clampThemeHue(Number(form.get("themeHue") || current.themeHue), current.themeHue),
+			themeHue: clampThemeHue(
+				Number(form.get("themeHue") || current.themeHue),
+				current.themeHue,
+			),
 			themeFixed: form.get("themeFixed") === "on",
-			profileAvatar: normalizeOptionalText(form.get("profileAvatar"), current.profileAvatar),
+			profileAvatar: normalizeOptionalText(
+				form.get("profileAvatar"),
+				current.profileAvatar,
+			),
 			profileName: normalizeText(form.get("profileName"), current.profileName),
-			bannerSrc: normalizeOptionalText(form.get("bannerSrc"), current.bannerSrc),
-			bannerPosition: parseBannerMode(String(form.get("bannerPosition") || current.bannerPosition), current.bannerPosition),
-			tocDepth: parseTocDepth(String(form.get("tocDepth") || current.tocDepth), current.tocDepth),
-			faviconSrc: normalizeOptionalText(form.get("faviconSrc"), current.faviconSrc),
-			profileBio: normalizeOptionalText(form.get("profileBio"), current.profileBio),
+			bannerSrc: normalizeOptionalText(
+				form.get("bannerSrc"),
+				current.bannerSrc,
+			),
+			bannerPosition: parseBannerMode(
+				String(form.get("bannerPosition") || current.bannerPosition),
+				current.bannerPosition,
+			),
+			tocDepth: parseTocDepth(
+				String(form.get("tocDepth") || current.tocDepth),
+				current.tocDepth,
+			),
+			faviconSrc:
+				normalizeOptionalText(form.get("faviconSrc")) ||
+				defaultSiteSettings.faviconSrc,
+			profileBio: normalizeOptionalText(
+				form.get("profileBio"),
+				current.profileBio,
+			),
 			aboutMarkdown: String(form.get("aboutMarkdown") || current.aboutMarkdown),
-			licenseName: normalizeOptionalText(form.get("licenseName"), current.licenseName),
-			licenseUrl: normalizeOptionalText(form.get("licenseUrl"), current.licenseUrl),
-			twikooEnvId: normalizeOptionalText(form.get("twikooEnvId"), current.twikooEnvId),
+			licenseName: normalizeOptionalText(
+				form.get("licenseName"),
+				current.licenseName,
+			),
+			licenseUrl: normalizeOptionalText(
+				form.get("licenseUrl"),
+				current.licenseUrl,
+			),
+			twikooEnvId: normalizeOptionalText(
+				form.get("twikooEnvId"),
+				current.twikooEnvId,
+			),
 			profileLinks,
 			navLinks,
 			bannerEnabled: form.get("bannerEnabled") === "on",
@@ -123,6 +162,9 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 		return redirect("/admin/settings/?error=save-failed");
 	}
 
-	await logAdminActivity("site:settings", "保存了站点基础设置、导航链接、Twikoo 评论及版权协议配置");
+	await logAdminActivity(
+		"site:settings",
+		"保存了站点基础设置、导航链接、Twikoo 评论及版权协议配置",
+	);
 	return redirect("/admin/settings/?success=1");
 };

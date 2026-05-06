@@ -2,18 +2,12 @@ type PostListOptions = {
 	formSelector: string;
 };
 
-declare global {
-	interface Window {
-		initAdminPostList?: (options: PostListOptions) => void;
-		showAdminConfirm?: (message: string) => Promise<boolean>;
-		showAdminAlert?: (message: string, title?: string) => Promise<void>;
-		showAdminToast?: (message: string, tone?: string) => void;
-	}
-}
-
 function initAdminPostList(options: PostListOptions) {
 	const form = document.querySelector(options.formSelector);
-	if (!(form instanceof HTMLFormElement) || form.dataset.initialized === "true") {
+	if (
+		!(form instanceof HTMLFormElement) ||
+		form.dataset.initialized === "true"
+	) {
 		return;
 	}
 	form.dataset.initialized = "true";
@@ -35,7 +29,8 @@ function initAdminPostList(options: PostListOptions) {
 		const selected = checkboxes.filter((checkbox) => checkbox.checked);
 
 		if (selectAll) {
-			selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
+			selectAll.checked =
+				checkboxes.length > 0 && selected.length === checkboxes.length;
 			selectAll.indeterminate =
 				selected.length > 0 && selected.length < checkboxes.length;
 		}
@@ -58,14 +53,19 @@ function initAdminPostList(options: PostListOptions) {
 
 	form.addEventListener("change", (event) => {
 		const target = event.target;
-		if (target instanceof HTMLInputElement && target.matches("[data-post-checkbox]")) {
+		if (
+			target instanceof HTMLInputElement &&
+			target.matches("[data-post-checkbox]")
+		) {
 			syncState();
 		}
 	});
 
 	for (const button of batchButtons) {
 		button.addEventListener("click", async (event) => {
-			const selectedCount = getPostCheckboxes().filter((checkbox) => checkbox.checked).length;
+			const selectedCount = getPostCheckboxes().filter(
+				(checkbox) => checkbox.checked,
+			).length;
 			if (selectedCount === 0) {
 				event.preventDefault();
 				window.showAdminToast?.("请先选择至少一篇文章。", "rose");
@@ -82,8 +82,11 @@ function initAdminPostList(options: PostListOptions) {
 			}
 
 			// Robust Action Capturing
-			const actionField = form.querySelector<HTMLInputElement>("[data-batch-action-field]");
-			const actionValue = button.dataset.batchSubmit || button.getAttribute("value");
+			const actionField = form.querySelector<HTMLInputElement>(
+				"[data-batch-action-field]",
+			);
+			const actionValue =
+				button.dataset.batchSubmit || button.getAttribute("value");
 			if (actionField && actionValue) {
 				actionField.value = actionValue;
 			}
@@ -94,6 +97,47 @@ function initAdminPostList(options: PostListOptions) {
 			}
 		});
 	}
+
+	form.addEventListener("click", async (event) => {
+		const target = event.target;
+		if (!(target instanceof HTMLElement)) return;
+
+		const deleteButton = target.closest<HTMLButtonElement>("[data-inline-delete]");
+		if (!deleteButton) return;
+
+		event.preventDefault();
+		const message = deleteButton.dataset.confirm || "确认删除这篇文章吗？";
+		const confirmed = await window.showAdminConfirm?.(message);
+		if (!confirmed) return;
+
+		const deleteForm = document.createElement("form");
+		deleteForm.method = "POST";
+		deleteForm.action = "/admin/api/posts/delete/";
+
+		const fields = {
+			slug: deleteButton.dataset.deleteSlug || "",
+			status: deleteButton.dataset.deleteStatus || "all",
+			sort: deleteButton.dataset.deleteSort || "published-desc",
+			q: deleteButton.dataset.deleteQuery || "",
+			page: deleteButton.dataset.deletePage || "1",
+			pageSize: deleteButton.dataset.deletePageSize || "10",
+		};
+
+		for (const [name, value] of Object.entries(fields)) {
+			const input = document.createElement("input");
+			input.type = "hidden";
+			input.name = name;
+			input.value = value;
+			deleteForm.appendChild(input);
+		}
+
+		document.body.appendChild(deleteForm);
+
+		deleteButton.disabled = true;
+		deleteButton.dataset.originalText = deleteButton.textContent || "";
+		deleteButton.textContent = "处理中...";
+		deleteForm.submit();
+	});
 
 	form.addEventListener("submit", (event) => {
 		const submitter = event.submitter;
@@ -114,11 +158,13 @@ function initAdminPostList(options: PostListOptions) {
 window.initAdminPostList = initAdminPostList;
 
 function bootPostLists() {
-	document.querySelectorAll<HTMLFormElement>("[data-admin-batch-form]").forEach(() => {
-		window.initAdminPostList?.({
-			formSelector: "[data-admin-batch-form]",
+	document
+		.querySelectorAll<HTMLFormElement>("[data-admin-batch-form]")
+		.forEach(() => {
+			window.initAdminPostList?.({
+				formSelector: "[data-admin-batch-form]",
+			});
 		});
-	});
 }
 
 if (document.readyState === "loading") {

@@ -103,18 +103,21 @@ const images = await listAdminMedia();
 			{images.length > 0 ? (
 				<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" data-media-standalone-grid>
 					{images.map((image) => (
+						(() => {
+							const plainPath = decodeURIComponent(image.url.split("?")[0]);
+							return (
 						<div
 							class="group flex flex-col rounded-3xl border border-black/5 bg-black/[0.02] p-4 transition-all hover:bg-white hover:shadow-xl dark:border-white/5 dark:bg-white/[0.02] dark:hover:bg-black/40"
 							data-media-item
 							data-name={image.name.toLowerCase()}
-							data-url={image.url.toLowerCase()}
+							data-url={plainPath.toLowerCase()}
 							data-size={String(image.size)}
 							data-modified={image.modifiedAt}
 						>
 							<div class="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/5 dark:bg-white/5">
 								<img src={image.url} alt={image.name} class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
 								<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-									<button type="button" class="btn-regular scale-90 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-transform group-hover:scale-100" data-copy-value={image.url.split('?')[0]}>复制路径</button>
+									<button type="button" class="btn-regular scale-90 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-transform group-hover:scale-100" data-copy-value={plainPath}>复制路径</button>
 								</div>
 							</div>
 							<div class="min-w-0 flex-1 px-1">
@@ -123,11 +126,13 @@ const images = await listAdminMedia();
 									<div class="text-[10px] font-medium text-black/30 dark:text-white/30">{Math.max(1, Math.round(image.size / 1024))} KB</div>
 									<div class="flex gap-2">
 										<button type="button" class="text-[10px] font-black uppercase tracking-widest text-[var(--primary)]/60 hover:text-[var(--primary)]" data-rename-value={image.name}>重命名</button>
-										<button type="button" class="text-[10px] font-black uppercase tracking-widest text-rose-500/60 hover:text-rose-500" data-delete-value={image.url}>删除</button>
+										<button type="button" class="text-[10px] font-black uppercase tracking-widest text-rose-500/60 hover:text-rose-500" data-delete-value={plainPath}>删除</button>
 									</div>
 								</div>
 							</div>
 						</div>
+							);
+						})()
 					))}
 				</div>
 			) : (
