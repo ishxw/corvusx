@@ -95,10 +95,10 @@ const jsonLd = {
             <RuntimeMarkdown html={entry.html} class="mb-6 markdown-content onload-animation" />
 
             {licenseConfig.enable && <License title={entry.title} slug={entry.slug} pubDate={entry.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
-
-            <Twikoo path={entry.slug} config={twikooConfig} class="onload-animation" />
         </div>
     </div>
+
+    <Twikoo path={entry.slug} config={twikooConfig} class="mb-4" />
 
     <div class="flex flex-col md:flex-row justify-between mb-4 gap-4 overflow-hidden w-full">
         <a href={entry.nextSlug ? getPostUrlBySlug(entry.nextSlug) : "#"}
