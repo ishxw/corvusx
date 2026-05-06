@@ -3,9 +3,18 @@ import type { AstroIntegration } from "@swup/astro";
 declare global {
 	interface Window {
 		// type from '@swup/astro' is incorrect
-		swup: AstroIntegration;
+		swup: any;
 		showAdminToast?: (message: string, type: "success" | "rose" | "error" | "warning") => void;
 		initGitHubCards?: () => void;
+		initAdminSettingsEnhancer?: (config: any) => void;
+		initAdminPostListEnhancer?: (config: any) => void;
+		initAdminMediaPickerEnhancer?: (config: any) => void;
+		adminIsDirty?: boolean;
+		twikooEnable?: boolean;
+		twikooEnvId?: string;
+		twikoo?: {
+			init: (config: any) => void;
+		};
 	}
 }
 

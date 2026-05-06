@@ -8,6 +8,20 @@ import path from "node:path";
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	const url = new URL(context.request.url);
+
+	// Performance: Skip middleware logic for static assets and internal Astro paths
+	if (
+		url.pathname.startsWith("/_astro/") ||
+		url.pathname.startsWith("/favicon/") ||
+		url.pathname.startsWith("/assets/") ||
+		url.pathname.endsWith(".png") ||
+		url.pathname.endsWith(".jpg") ||
+		url.pathname.endsWith(".jpeg") ||
+		url.pathname.endsWith(".webp") ||
+		url.pathname.endsWith(".svg")
+	) {
+		return next();
+	}
 	
 	// Direct serve for uploads to avoid Astro static serving issues in dev/prod
 	if (url.pathname.startsWith("/uploads/")) {

@@ -21,19 +21,6 @@ const actionLabels: Record<string, string> = {
 	"media:delete": "删除素材",
 };
 
-const legacyActionMap: Record<string, string> = {
-	"鍚庡彴鐧诲綍": actionLabels["auth:login"],
-	"閫€鍑虹櫥褰?": actionLabels["auth:logout"],
-	"淇敼瀵嗙爜": actionLabels["auth:password"],
-	"鍒涘缓鏂囩珷": actionLabels["post:create"],
-	"淇濆瓨鏂囩珷": actionLabels["post:save"],
-	"鍒犻櫎鏂囩珷": actionLabels["post:delete"],
-	"鎵归噺鎿嶄綔": actionLabels["post:batch"],
-	"鏇存柊绔欑偣璁剧疆": actionLabels["site:settings"],
-	"涓婁紶绱犳潗": actionLabels["media:upload"],
-	"鍒犻櫎绱犳潗": actionLabels["media:delete"],
-};
-
 const batchActionLabels: Record<string, string> = {
 	publish: "批量发布",
 	draft: "批量转为草稿",
@@ -45,14 +32,13 @@ const batchActionLabels: Record<string, string> = {
 };
 
 function normalizeAction(value: string): string {
-	return actionLabels[value] || legacyActionMap[value] || value;
+	return actionLabels[value] || value;
 }
 
 function normalizeDetail(value: string): string {
 	const normalized = value
-		.replaceAll("鑴?", "×")
-		.replaceAll("脳", "×")
-		.replaceAll("鈥?", "…");
+		.replaceAll("×", "×")
+		.replaceAll("…", "…");
 
 	const batchMatch = /^([a-z-]+)\s*[×x]\s*(\d+)$/.exec(normalized);
 	if (batchMatch && batchActionLabels[batchMatch[1]]) {
