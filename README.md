@@ -1,29 +1,45 @@
 # Corvusx
+![Node.js >= 20](https://img.shields.io/badge/node.js-%3E%3D20-brightgreen) 
+![pnpm >= 9](https://img.shields.io/badge/pnpm-%3E%3D9-blue) 
 
-基于 [Astro](https://astro.build/) 与 [Fuwari](https://github.com/saicaca/fuwari) 定制的个人博客。
+一个基于 [fuwari](https://astro.build/) 开发带管理后台的博客。
 
-## 本地开发
 
+## 👀 依赖需求
+
+- Node.js >= 22
+- pnpm >= 9
+
+
+## 🚀本地开发
+创建本地博客仓库：
 ```sh
+git clone https://github.com/ishxw/corvusx.git
+cd corvusx
 pnpm install
 pnpm dev
 ```
-
-## 发布
-
+发布场景：
 ```sh
 pnpm build
 pnpm preview
 ```
 
-
-默认开发地址是 `http://localhost:4321/`。
-
+默认地址是 `http://localhost:3033/`。
 ```sh
-后台管理面板
+博客后台管理面板：
    * 用户名：admin
    * 默认密码：admin123456
 ```
+
+通过后台管理面板或本地配置文件自定义博客 
+
+## 🧩 Markdown 扩展语法
+
+除了 Astro 默认支持的 [GitHub 风格 Markdown](https://github.github.com/gfm/) 之外，还额外提供了以下增强功能：
+* 提示块（[预览与用法](https://fuwari.vercel.app/posts/markdown-extended/#admonitions)）
+* GitHub 仓库卡片（[预览与用法](https://fuwari.vercel.app/posts/markdown-extended/#github-repository-cards)）
+* 使用 Expressive Code 的增强代码块（[预览](https://fuwari.vercel.app/posts/expressive-code/) / [文档](https://expressive-code.com/)）
 
 ## 常用命令
 
