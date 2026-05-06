@@ -143,3 +143,15 @@
 .custom-md spoiler {
   @apply bg-black/10 dark:bg-white/10 text-transparent hover:bg-transparent hover:text-inherit px-1 py-0.5 overflow-hidden rounded-md transition-all duration-300 cursor-help;
 }
+
+/* Twikoo Loading Fix: Suppress flicker during SPA navigation */
+#tcomment {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+#tcomment.twikoo-loaded {
+    opacity: 1 !important;
+}
+#tcomment:not(.twikoo-loaded) * {
+    visibility: hidden !important;
+}

@@ -13,18 +13,5 @@ const { enable } = config;
 ---
 
 {enable && (
-    <>
-        <div id="tcomment" class:list={[className, "opacity-0 transition-opacity duration-300"]} data-twikoo-path={path}></div>
-        <style is:global>
-            /* Hide the container until Twikoo is ready to prevent layout/asset flicker */
-            #tcomment.twikoo-loaded {
-                opacity: 1 !important;
-            }
-            
-            /* Additional safety: ensure Twikoo's own internal placeholders are suppressed */
-            #tcomment:not(.twikoo-loaded) * {
-                visibility: hidden !important;
-            }
-        </style>
-    </>
+    <div id="tcomment" class={className} data-twikoo-path={path}></div>
 )}
