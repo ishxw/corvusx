@@ -1,11 +1,13 @@
 ---
-title: Corvusx 正式起航
+title: "Corvusx 正式起航"
 published: 2026-05-04
+updated: 2026-05-07
 description: "这是 Corvusx 的第一篇文章，也是博客的起点。"
 image: "./cover.jpeg"
 tags: ["Corvusx", "博客", "起步"]
-category: 站点
+category: "站点"
 draft: false
+lang: ""
 ---
 
 欢迎来到 **Corvusx**。
@@ -26,3 +28,4 @@ draft: false
 - 写下第一篇真正想发布的文章
 
 如果你也在搭建自己的数字花园，愿这个起点足够轻，也足够坚定。
+

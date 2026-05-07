@@ -68,5 +68,8 @@ pnpm preview
 ```sh
 SITE=https://your-domain.com
 ```
+或通过在项目根目录创建`.env` 文件写入`SITE=https://your-domain.com`
+
+
 如果你不想使用环境变量，也可以直接修改 `astro.config.mjs` 里的 `site` 配置
 参考[官方指南](https://docs.astro.build/zh-cn/guides/deploy/)将博客部署至 Vercel, Netlify, GitHub Pages 等；部署前需编辑 `astro.config.mjs` 中的站点设置

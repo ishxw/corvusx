@@ -28,7 +28,7 @@ import {
 } from "../constants/constants";
 import { defaultFavicons } from "../constants/icon";
 import type { Favicon } from "../types/config";
-import { pathsEqual, url } from "../utils/url-utils";
+import { getCanonicalUrl, pathsEqual, url } from "../utils/url-utils";
 import "katex/dist/katex.css";
 
 interface Props {
@@ -76,6 +76,8 @@ const rawFavicons: Favicon[] =
 		: defaultFavicons;
 const favicons = await resolveFavicons(rawFavicons);
 
+const canonicalURL = getCanonicalUrl(Astro.url, Astro.request, Astro.site);
+
 // const siteLang = siteConfig.lang.replace('_', '-')
 if (!lang) {
 	lang = `${activeSiteConfig.lang}`;
@@ -113,7 +115,7 @@ const bannerOffset =
 		<meta name="author" content={activeProfileConfig.name}>
 
 		<meta property="og:site_name" content={activeSiteConfig.title}>
-		<meta property="og:url" content={Astro.url}>
+		<meta property="og:url" content={canonicalURL}>
 		<meta property="og:title" content={pageTitle}>
 		<meta property="og:description" content={description || pageTitle}>
 		{setOGTypeArticle ? (
@@ -123,7 +125,7 @@ const bannerOffset =
         )}
 
 		<meta name="twitter:card" content="summary_large_image">
-		<meta property="twitter:url" content={Astro.url}>
+		<meta property="twitter:url" content={canonicalURL}>
 		<meta name="twitter:title" content={pageTitle}>
 		<meta name="twitter:description" content={description || pageTitle}>
 

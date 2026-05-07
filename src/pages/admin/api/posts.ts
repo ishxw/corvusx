@@ -92,6 +92,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
 	await saveAdminPost({
 		slug,
+		sourcePath: existing?.sourcePath,
 		title,
 		published: normalizeDate(String(form.get("published") || "")),
 		publishAt: normalizePublishAt(String(form.get("publishAt") || "")),
