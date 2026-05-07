@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import { ADMIN_ACTIVITY_LOG_PATH, DATA_DIR } from "./paths";
-import { writeJsonAtomic } from "./file-utils";
+import { readJsonAtomic, updateJsonAtomic } from "./file-utils";
 
 export type AdminActivity = {
 	id: string;
@@ -53,27 +53,20 @@ async function ensureDir() {
 
 async function readActivities(): Promise<AdminActivity[]> {
 	await ensureDir();
-	try {
-		const raw = await fs.readFile(ADMIN_ACTIVITY_LOG_PATH, "utf8");
-		return JSON.parse(raw) as AdminActivity[];
-	} catch {
-		return [];
-	}
-}
-
-async function writeActivities(items: AdminActivity[]) {
-	await writeJsonAtomic(ADMIN_ACTIVITY_LOG_PATH, items);
+	return (await readJsonAtomic<AdminActivity[]>(ADMIN_ACTIVITY_LOG_PATH)) || [];
 }
 
 export async function logAdminActivity(action: string, detail: string) {
-	const activities = await readActivities();
-	activities.unshift({
-		id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
-		action,
-		detail,
-		createdAt: new Date().toISOString(),
+	await updateJsonAtomic<AdminActivity[]>(ADMIN_ACTIVITY_LOG_PATH, (data) => {
+		const activities = data || [];
+		activities.unshift({
+			id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+			action,
+			detail,
+			createdAt: new Date().toISOString(),
+		});
+		return activities.slice(0, 80);
 	});
-	await writeActivities(activities.slice(0, 80));
 }
 
 export async function listAdminActivities(limit = 8): Promise<AdminActivity[]> {
