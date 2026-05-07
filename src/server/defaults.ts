@@ -11,7 +11,7 @@ export const defaultSiteSettings: AdminSiteSettings = {
 	bannerPosition: "top",
 	tocEnabled: true,
 	tocDepth: 2,
-	faviconSrc: "/favicon/corvusx.svg",
+	faviconSrc: "/favicon/icon.svg",
 	profileAvatar: "assets/images/default-avatar.png",
 	profileName: "Corvusx",
 	profileBio: "记录代码、设计、想法与长期项目。",
