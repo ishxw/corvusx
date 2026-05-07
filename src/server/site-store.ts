@@ -29,10 +29,7 @@ function normalizeSiteSettings(
 			: parsed.bannerPosition === "bottom"
 				? "bottom"
 				: "top";
-	const faviconSrc =
-		parsed.faviconSrc === "public/favicon/corvusx.svg"
-			? "/favicon/corvusx.svg"
-			: (parsed.faviconSrc?.trim() || defaultSiteSettings.faviconSrc);
+	const faviconSrc = parsed.faviconSrc?.trim() || defaultSiteSettings.faviconSrc;
 
 	return {
 		...defaultSiteSettings,
