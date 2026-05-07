@@ -9,11 +9,19 @@ if (!Astro.locals.adminUser) {
 }
 
 const images = await listAdminMedia();
+const uploadError = Astro.url.searchParams.get("error");
 ---
 
 <AdminLayout
 	title="素材管理"
 	description="统一管理博客用到的上传图片。你可以在这里上传、搜索、复制路径和删除素材，文章编辑页与站点设置页也会共用这套素材库。"
+	error={
+		uploadError === "missing-file"
+			? "请选择要上传的文件。"
+			: uploadError === "invalid-file"
+				? "上传失败：文件类型、大小或文件名不符合要求。"
+				: null
+	}
 >
 	<div class="grid gap-8 xl:grid-cols-[380px_1fr]">
 		<!-- Left: Upload Section -->

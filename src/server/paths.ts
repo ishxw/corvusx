@@ -11,6 +11,10 @@ export const SESSION_SECRET_PATH: string = path.join(
 	"session-secret.txt",
 );
 export const ADMIN_USERS_PATH: string = path.join(DATA_DIR, "admin-users.json");
+export const ADMIN_BOOTSTRAP_STATE_PATH: string = path.join(
+	DATA_DIR,
+	"admin-bootstrap.json",
+);
 export const ADMIN_ACTIVITY_LOG_PATH: string = path.join(
 	DATA_DIR,
 	"admin-activity-log.json",

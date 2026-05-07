@@ -3,6 +3,7 @@ import { logAdminActivity } from "@/server/admin-activity";
 import {
 	deleteAdminPost,
 	getAdminPost,
+	isValidAdminSlug,
 	saveAdminPost,
 } from "@/server/post-store";
 
@@ -188,6 +189,19 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 		return redirect(
 			buildRedirect({
 				error: "no-selection",
+				status,
+				sort,
+				query,
+				page,
+				pageSize,
+			}),
+		);
+	}
+
+	if (slugs.some((slug) => !isValidAdminSlug(slug))) {
+		return redirect(
+			buildRedirect({
+				error: "invalid-slug",
 				status,
 				sort,
 				query,

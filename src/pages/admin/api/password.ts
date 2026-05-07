@@ -28,5 +28,5 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 	}
 
 	await logAdminActivity("auth:password", locals.adminUser);
-	return redirect("/admin/password/?success=1");
+	return redirect("/admin/?success=password-updated");
 };

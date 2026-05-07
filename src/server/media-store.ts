@@ -9,6 +9,22 @@ export type AdminMediaItem = {
 };
 
 const UPLOAD_DIR = path.resolve("data/uploads");
+const MAX_MEDIA_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_MEDIA_EXTENSIONS = new Set([
+	".png",
+	".jpg",
+	".jpeg",
+	".gif",
+	".webp",
+	".svg",
+]);
+const ALLOWED_MEDIA_MIME_TYPES = new Set([
+	"image/png",
+	"image/jpeg",
+	"image/gif",
+	"image/webp",
+	"image/svg+xml",
+]);
 
 async function ensureUploadDir() {
 	await fs.mkdir(UPLOAD_DIR, { recursive: true });
@@ -28,6 +44,46 @@ export function sanitizeMediaName(fileName: string): string {
 			.replace(/-+/g, "-")
 			.trim()
 	);
+}
+
+function ensureMediaFileName(fileName: string): string {
+	const sanitized = sanitizeMediaName(path.basename(fileName)).trim();
+	if (!sanitized || sanitized === "." || sanitized === "..") {
+		throw new Error("Invalid file name.");
+	}
+	return sanitized;
+}
+
+function ensureMediaExtension(fileName: string): string {
+	const extension = path.extname(fileName).toLowerCase();
+	if (!ALLOWED_MEDIA_EXTENSIONS.has(extension)) {
+		throw new Error("Unsupported file type.");
+	}
+	return extension;
+}
+
+function ensureMediaMimeType(file: File): void {
+	if (!ALLOWED_MEDIA_MIME_TYPES.has(file.type)) {
+		throw new Error("Unsupported file type.");
+	}
+}
+
+function ensureMediaFileSize(file: File): void {
+	if (file.size <= 0) {
+		throw new Error("Empty files are not allowed.");
+	}
+	if (file.size > MAX_MEDIA_FILE_SIZE) {
+		throw new Error("File is too large.");
+	}
+}
+
+function resolveUploadFilePath(fileName: string): string {
+	const safeName = ensureMediaFileName(fileName);
+	const targetPath = path.resolve(UPLOAD_DIR, safeName);
+	if (path.dirname(targetPath) !== UPLOAD_DIR) {
+		throw new Error("Invalid file path.");
+	}
+	return targetPath;
 }
 
 export async function listAdminMedia(): Promise<AdminMediaItem[]> {
@@ -54,13 +110,16 @@ export async function listAdminMedia(): Promise<AdminMediaItem[]> {
 
 export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
 	await ensureUploadDir();
+	ensureMediaFileSize(file);
+	ensureMediaMimeType(file);
 
-	const originalName = file.name || "upload.bin";
+	const originalName = ensureMediaFileName(file.name || "upload.bin");
 	const ext = path.extname(originalName);
+	ensureMediaExtension(originalName);
 	const baseName = path.basename(originalName, ext);
 
 	let fileName = originalName;
-	let targetPath = path.join(UPLOAD_DIR, fileName);
+	let targetPath = resolveUploadFilePath(fileName);
 	let counter = 1;
 
 	while (
@@ -70,7 +129,7 @@ export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
 			.catch(() => false)
 	) {
 		fileName = `${baseName}-${counter}${ext}`;
-		targetPath = path.join(UPLOAD_DIR, fileName);
+		targetPath = resolveUploadFilePath(fileName);
 		counter++;
 	}
 
@@ -87,8 +146,10 @@ export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
 }
 
 export async function deleteAdminMedia(fileOrUrl: string): Promise<void> {
-	const fileName = decodeURIComponent(path.basename(fileOrUrl.split("?")[0]));
-	const targetPath = path.join(UPLOAD_DIR, fileName);
+	const fileName = ensureMediaFileName(
+		decodeURIComponent(path.basename(fileOrUrl.split("?")[0])),
+	);
+	const targetPath = resolveUploadFilePath(fileName);
 	await fs.rm(targetPath, { force: true });
 }
 
@@ -96,17 +157,18 @@ export async function renameAdminMedia(
 	oldName: string,
 	newName: string,
 ): Promise<AdminMediaItem> {
-	const oldExt = path.extname(oldName);
-	let safeNewName = sanitizeMediaName(newName);
+	const oldBasename = ensureMediaFileName(oldName);
+	const oldExt = path.extname(oldBasename);
+	let safeNewName = ensureMediaFileName(newName);
 
 	// If the new name doesn't have an extension, preserve the old one
 	if (path.extname(safeNewName) === "" && oldExt !== "") {
 		safeNewName += oldExt;
 	}
+	ensureMediaExtension(safeNewName);
 
-	const oldBasename = path.basename(oldName);
-	const oldPath = path.join(UPLOAD_DIR, oldBasename);
-	const newPath = path.join(UPLOAD_DIR, safeNewName);
+	const oldPath = resolveUploadFilePath(oldBasename);
+	const newPath = resolveUploadFilePath(safeNewName);
 
 	// Case-insensitive check: if names differ ONLY in case, skip existence check
 	const isCaseOnlyChange =
@@ -131,5 +193,12 @@ export async function renameAdminMedia(
 		url: toMediaUrl(safeNewName),
 		size: stats.size,
 		modifiedAt: stats.mtime.toISOString(),
+	};
+}
+
+export function getMediaUploadConstraints() {
+	return {
+		maxBytes: MAX_MEDIA_FILE_SIZE,
+		allowedExtensions: [...ALLOWED_MEDIA_EXTENSIONS],
 	};
 }

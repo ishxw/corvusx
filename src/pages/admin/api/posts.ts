@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
 import {
 	getAdminPost,
+	isValidAdminSlug,
 	moveAdminPostSlug,
 	saveAdminPost,
 } from "@/server/post-store";
@@ -69,6 +70,18 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 				slug,
 				intent,
 				error: "required",
+			}),
+		);
+	}
+
+	if (!isValidAdminSlug(slug) || !isValidAdminSlug(originalSlug)) {
+		return redirect(
+			buildPostRedirect({
+				mode,
+				originalSlug,
+				slug,
+				intent,
+				error: "invalid-slug",
 			}),
 		);
 	}

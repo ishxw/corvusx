@@ -22,6 +22,7 @@ import { GithubCardComponent } from "./src/plugins/rehype-component-github-card.
 import { parseDirectiveNode } from "./src/plugins/remark-directive-rehype.js";
 import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
+import corvusxNodeAdapter from "./src/server/astro-node-adapter.mjs";
 
 const site = process.env.SITE || "https://example.com/";
 
@@ -109,7 +110,7 @@ export default defineConfig({
         svelte(),
 		sitemap(),
 	],
-	adapter: node({
+	adapter: corvusxNodeAdapter({
 		mode: "standalone",
 	}),
 	markdown: {

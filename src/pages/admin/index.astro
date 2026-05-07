@@ -178,7 +178,7 @@ for (const post of paginatedPosts) {
 <AdminLayout
 	title="控制台"
 	description="在这里统一管理文章、站点设置、素材资源和后台活动。文章仍然会保存到仓库里的 Markdown 文件，但写作和配置现在都可以直接在后台完成。"
-	success={successMessage}
+	success={successCode === "password-updated" ? "管理员密码已更新。" : successMessage}
 	error={errorMessage}
 	backHref="/"
 	backLabel="查看前台"

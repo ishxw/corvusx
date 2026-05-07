@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
 import {
 	deleteAdminMedia,
+	getMediaUploadConstraints,
 	listAdminMedia,
 	renameAdminMedia,
 	saveAdminMediaFile,
@@ -28,7 +29,7 @@ export const GET: APIRoute = async ({ locals }) => {
 	}
 
 	const items = await listAdminMedia();
-	return jsonResponse({ items });
+	return jsonResponse({ items, constraints: getMediaUploadConstraints() });
 };
 
 export const POST: APIRoute = async ({ request, locals, redirect }) => {
@@ -46,7 +47,18 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 		return redirect("/admin/media/?error=missing-file");
 	}
 
-	const item = await saveAdminMediaFile(file);
+	let item;
+	try {
+		item = await saveAdminMediaFile(file);
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : "Failed to upload file";
+		if (wantsJson(request)) {
+			return jsonResponse({ error: message }, 400);
+		}
+		return redirect("/admin/media/?error=invalid-file");
+	}
+
 	await logAdminActivity("media:upload", item.name);
 
 	if (wantsJson(request)) {
@@ -90,6 +102,6 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 		return jsonResponse({ ok: true, item });
 	} catch (e) {
 		const err = e as Error;
-		return jsonResponse({ error: err.message }, 500);
+		return jsonResponse({ error: err.message }, 400);
 	}
 };

@@ -1,6 +1,10 @@
 import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
-import { deleteAdminPost, getAdminPost } from "@/server/post-store";
+import {
+	deleteAdminPost,
+	getAdminPost,
+	isValidAdminSlug,
+} from "@/server/post-store";
 
 function buildRedirect(params: {
 	status?: string;
@@ -44,7 +48,7 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 		form.get("originalSlug") || form.get("slug") || "",
 	).replace(/^\/|\/$/g, "");
 
-	if (slug) {
+	if (slug && isValidAdminSlug(slug)) {
 		const post = await getAdminPost(slug);
 		await deleteAdminPost(slug);
 		await logAdminActivity(

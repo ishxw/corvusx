@@ -108,6 +108,31 @@ function toSlug(filePath: string): string {
 
 type PostPathStyle = "flat" | "index";
 
+const VALID_SLUG_SEGMENT_PATTERN = /^[\p{Letter}\p{Number}_-]+$/u;
+
+function validateSlugOrThrow(slug: string): string {
+	if (!slug || slug === "/") {
+		return "";
+	}
+
+	const normalized = slug.replace(/^\/|\/$/g, "");
+	if (!normalized) {
+		return "";
+	}
+
+	const segments = normalized.split("/");
+	for (const segment of segments) {
+		if (!segment || segment === "." || segment === "..") {
+			throw new Error("Invalid slug.");
+		}
+		if (!VALID_SLUG_SEGMENT_PATTERN.test(segment)) {
+			throw new Error("Invalid slug.");
+		}
+	}
+
+	return normalized;
+}
+
 function buildPathFromSlug(
 	slug: string,
 	style?: PostPathStyle,
@@ -115,13 +140,17 @@ function buildPathFromSlug(
 	if (!slug || slug === "/") {
 		return path.join(POSTS_DIR, "index.md");
 	}
-	const normalized = slug.replace(/^\/|\/$/g, "");
+	const normalized = validateSlugOrThrow(slug);
 	const resolvedStyle =
 		style ?? (normalized.includes("/") ? "index" : "flat");
-	if (resolvedStyle === "index") {
-		return path.join(POSTS_DIR, normalized, "index.md");
+	const targetPath =
+		resolvedStyle === "index"
+			? path.resolve(POSTS_DIR, normalized, "index.md")
+			: path.resolve(POSTS_DIR, `${normalized}.md`);
+	if (!targetPath.startsWith(`${POSTS_DIR}${path.sep}`)) {
+		throw new Error("Invalid slug.");
 	}
-	return path.join(POSTS_DIR, `${normalized}.md`);
+	return targetPath;
 }
 
 async function resolveExistingPostPath(slug: string): Promise<string | null> {
@@ -130,7 +159,7 @@ async function resolveExistingPostPath(slug: string): Promise<string | null> {
 		return (await pathExists(rootPath)) ? rootPath : null;
 	}
 
-	const normalized = slug.replace(/^\/|\/$/g, "");
+	const normalized = validateSlugOrThrow(slug);
 	const candidates = [
 		buildPathFromSlug(normalized, "flat"),
 		buildPathFromSlug(normalized, "index"),
@@ -233,7 +262,13 @@ export async function listAdminPosts(): Promise<AdminPost[]> {
 }
 
 export async function getAdminPost(slug: string): Promise<AdminPost | null> {
-	const targetPath = (await resolveExistingPostPath(slug)) ?? buildPathFromSlug(slug);
+	let targetPath: string;
+	try {
+		targetPath =
+			(await resolveExistingPostPath(slug)) ?? buildPathFromSlug(slug);
+	} catch {
+		return null;
+	}
 	try {
 		const raw = await fs.readFile(targetPath, "utf8");
 		return parseFrontmatter(targetPath, raw);
@@ -284,6 +319,15 @@ export async function deleteAdminPost(slug: string): Promise<void> {
 		(await resolveExistingPostPath(slug)) ?? buildPathFromSlug(slug);
 	await fs.rm(targetPath, { force: true });
 	await cleanupEmptyParentDirs(targetPath);
+}
+
+export function isValidAdminSlug(slug: string): boolean {
+	try {
+		validateSlugOrThrow(slug);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 export async function listPublicPosts(
