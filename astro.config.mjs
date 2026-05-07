@@ -36,7 +36,7 @@ export default defineConfig({
 		port: 3033,
 	},
 	security: {
-		checkOrigin: false,
+		checkOrigin: true,
 	},
 	integrations: [
 		tailwind({

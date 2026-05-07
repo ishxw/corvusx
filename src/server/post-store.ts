@@ -4,6 +4,8 @@ import matter from "gray-matter";
 import type { AdminPost, PublicPostSummary } from "@/types/admin";
 import { getAdminPostStatus } from "./admin-post-status";
 import { POSTS_DIR } from "./paths";
+import { normalizeDate, normalizeDateTime } from "@/utils/date-utils";
+import { writeFileAtomic } from "./file-utils";
 
 type Frontmatter = {
 	title: string | Date;
@@ -18,6 +20,13 @@ type Frontmatter = {
 	lang?: string;
 };
 
+// Simple in-memory cache for admin posts
+let cachedAdminPosts: AdminPost[] | null = null;
+
+function invalidatePostCache() {
+	cachedAdminPosts = null;
+}
+
 async function ensureDir(dir: string) {
 	await fs.mkdir(dir, { recursive: true });
 }
@@ -29,49 +38,6 @@ async function pathExists(targetPath: string): Promise<boolean> {
 	} catch {
 		return false;
 	}
-}
-
-function normalizeFrontmatterDate(
-	value: string | Date | undefined,
-): string | undefined {
-	if (!value) return undefined;
-	if (value instanceof Date) {
-		if (Number.isNaN(value.getTime())) return undefined;
-		return value.toISOString().slice(0, 10);
-	}
-
-	const trimmed = String(value).trim();
-	if (!trimmed) return undefined;
-
-	// Check if already in YYYY-MM-DD format
-	if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
-
-	const parsed = new Date(trimmed);
-	if (!Number.isNaN(parsed.getTime())) {
-		return parsed.toISOString().slice(0, 10);
-	}
-
-	return undefined;
-}
-
-function normalizeDateTime(
-	value: string | Date | undefined,
-): string | undefined {
-	if (!value) return undefined;
-	if (value instanceof Date) {
-		if (Number.isNaN(value.getTime())) return undefined;
-		return value.toISOString().slice(0, 16);
-	}
-
-	const trimmed = value.trim();
-	if (!trimmed) return undefined;
-
-	const parsed = new Date(trimmed);
-	if (!Number.isNaN(parsed.getTime()) && !trimmed.includes("T")) {
-		return parsed.toISOString().slice(0, 16);
-	}
-
-	return trimmed;
 }
 
 async function walkMarkdownFiles(dir: string): Promise<string[]> {
@@ -207,10 +173,10 @@ function parseFrontmatter(filePath: string, raw: string): AdminPost {
 				? data.title.toISOString()
 				: String(data.title ?? ""),
 		published:
-			normalizeFrontmatterDate(data.published) ??
+			normalizeDate(data.published) ??
 			new Date().toISOString().slice(0, 10),
 		publishAt: normalizeDateTime(data.publishAt),
-		updated: normalizeFrontmatterDate(data.updated),
+		updated: normalizeDate(data.updated),
 		description: data.description ?? "",
 		image: data.image ?? "",
 		tags: data.tags ?? [],
@@ -250,6 +216,8 @@ function serializePost(post: AdminPost): string {
 }
 
 export async function listAdminPosts(): Promise<AdminPost[]> {
+	if (cachedAdminPosts) return cachedAdminPosts;
+
 	await ensureDir(POSTS_DIR);
 	const files = await walkMarkdownFiles(POSTS_DIR);
 	const posts = await Promise.all(
@@ -258,10 +226,17 @@ export async function listAdminPosts(): Promise<AdminPost[]> {
 			return parseFrontmatter(filePath, raw);
 		}),
 	);
-	return posts.sort((a, b) => (a.published < b.published ? 1 : -1));
+	cachedAdminPosts = posts.sort((a, b) => (a.published < b.published ? 1 : -1));
+	return cachedAdminPosts;
 }
 
 export async function getAdminPost(slug: string): Promise<AdminPost | null> {
+	// Try to find in cache first
+	if (cachedAdminPosts) {
+		const found = cachedAdminPosts.find((p) => p.slug === slug);
+		if (found) return found;
+	}
+
 	let targetPath: string;
 	try {
 		targetPath =
@@ -283,7 +258,8 @@ export async function saveAdminPost(post: AdminPost): Promise<void> {
 		inferPathStyle(post.sourcePath),
 	);
 	await ensureDir(path.dirname(targetPath));
-	await fs.writeFile(targetPath, serializePost(post), "utf8");
+	await writeFileAtomic(targetPath, serializePost(post));
+	invalidatePostCache();
 }
 
 export async function moveAdminPostSlug(
@@ -303,12 +279,14 @@ export async function moveAdminPostSlug(
 			await fs.access(nextPath);
 			await fs.rm(oldPath, { force: true });
 			await cleanupEmptyParentDirs(oldPath);
+			invalidatePostCache();
 			return;
 		} catch {
 			// fall through to rename when the next path does not exist yet
 		}
 		await fs.rename(oldPath, nextPath);
 		await cleanupEmptyParentDirs(oldPath);
+		invalidatePostCache();
 	} catch {
 		// no-op if old file does not exist yet
 	}
@@ -319,6 +297,7 @@ export async function deleteAdminPost(slug: string): Promise<void> {
 		(await resolveExistingPostPath(slug)) ?? buildPathFromSlug(slug);
 	await fs.rm(targetPath, { force: true });
 	await cleanupEmptyParentDirs(targetPath);
+	invalidatePostCache();
 }
 
 export function isValidAdminSlug(slug: string): boolean {

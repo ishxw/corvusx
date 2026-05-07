@@ -3,16 +3,12 @@ import { logAdminActivity } from "@/server/admin-activity";
 import { updateAdminPassword } from "@/server/auth";
 
 export const POST: APIRoute = async ({ request, locals, redirect }) => {
-	if (!locals.adminUser) {
-		return redirect("/admin/login/");
-	}
-
 	const form = await request.formData();
 	const currentPassword = String(form.get("currentPassword") || "");
 	const nextPassword = String(form.get("nextPassword") || "");
 
 	const result = await updateAdminPassword(
-		locals.adminUser,
+		locals.adminUser!,
 		currentPassword,
 		nextPassword,
 	);
@@ -27,6 +23,6 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 		return redirect("/admin/password/?error=1");
 	}
 
-	await logAdminActivity("auth:password", locals.adminUser);
+	await logAdminActivity("auth:password", locals.adminUser!);
 	return redirect("/admin/?success=password-updated");
 };

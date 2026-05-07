@@ -1,6 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { requireSameOriginAdminRequest } from "./server/admin-request";
 import { verifySessionToken } from "./server/auth";
 import { setCachedRuntimeConfig } from "./server/config-cache";
 import { siteSettingsToRuntimeConfig } from "./server/runtime-config";
@@ -25,11 +26,16 @@ export const onRequest: ReturnType<typeof defineMiddleware> = defineMiddleware(
 				.slice("/uploads/".length)
 				.replace(/\/+$/g, "");
 			const fileName = path.basename(relativePath);
-			if (!relativePath || !fileName || fileName === ".") {
+			if (!relativePath || !fileName || fileName === "." || fileName === "..") {
 				return new Response("Not Found", { status: 404 });
 			}
 
-			const filePath = path.resolve("data/uploads", fileName);
+			const uploadsDir = path.resolve("data/uploads");
+			const filePath = path.resolve(uploadsDir, fileName);
+			if (path.dirname(filePath) !== uploadsDir) {
+				return new Response("Not Found", { status: 404 });
+			}
+
 			try {
 				const stats = await fs.stat(filePath);
 				if (!stats.isFile()) {
@@ -74,6 +80,36 @@ export const onRequest: ReturnType<typeof defineMiddleware> = defineMiddleware(
 		const token = context.cookies.get("corvusx_admin_session")?.value;
 		const username = await verifySessionToken(token);
 		context.locals.adminUser = username;
+
+		// Global Admin API protection
+		if (pathname.startsWith("/admin/api/")) {
+			// login route handles auth itself
+			if (pathname !== "/admin/api/login/") {
+				const accept = context.request.headers.get("accept") || "";
+				const wantsJson = accept.includes("application/json");
+
+				if (!username) {
+					if (wantsJson) {
+						return new Response(JSON.stringify({ error: "Unauthorized" }), {
+							status: 401,
+							headers: { "Content-Type": "application/json" },
+						});
+					}
+					return context.redirect("/admin/login/");
+				}
+
+				const originError = requireSameOriginAdminRequest(context.request);
+				if (originError) {
+					if (wantsJson) {
+						return new Response(JSON.stringify({ error: "Forbidden" }), {
+							status: 403,
+							headers: { "Content-Type": "application/json" },
+						});
+					}
+					return context.redirect("/admin/login/");
+				}
+			}
+		}
 
 		const settings = await getSiteSettings();
 		setCachedRuntimeConfig({

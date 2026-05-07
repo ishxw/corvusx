@@ -417,9 +417,12 @@ function initTwikoo() {
 init();
 
 const setup = () => {
+	const swup = window.swup;
+	if (!swup) return;
+
 	// Keep dynamically-added styles/scripts across Swup page swaps.
 	// This prevents component-scoped styles (e.g. Svelte widgets in navbar) from disappearing after navigation.
-	const headPlugin = window.swup?.findPlugin?.('SwupHeadPlugin');
+	const headPlugin = swup.findPlugin?.('SwupHeadPlugin');
 	if (headPlugin?.options) {
 		headPlugin.options.persistAssets = true;
 		headPlugin.options.persistTags = 'link[rel=stylesheet], script[src], style';
@@ -437,7 +440,7 @@ const setup = () => {
 		}
 	})
 */
-	window.swup.hooks.on('link:click', () => {
+	swup.hooks.on('link:click', () => {
 		// Remove the delay for the first time page load
 		document.documentElement.style.setProperty('--content-delay', '0ms')
 
@@ -454,11 +457,11 @@ const setup = () => {
 			navbar.classList.add('navbar-hidden')
 		}
 	})
-	window.swup.hooks.on('content:replace', () => {
+	swup.hooks.on('content:replace', () => {
 		initCustomScrollbar();
 		initTwikoo();
 	})
-	window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
+	swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
 		// change banner height immediately when a link is clicked
 		const bodyElement = document.querySelector('body')
 		if (pathsEqual(visit.to.url, url('/'))) {
@@ -479,14 +482,14 @@ const setup = () => {
 			toc.classList.add('toc-not-ready')
 		}
 	});
-	window.swup.hooks.on('page:view', () => {
+	swup.hooks.on('page:view', () => {
 		// hide the temp high element when the transition is done
 		const heightExtend = document.getElementById('page-height-extend')
 		if (heightExtend) {
 			heightExtend.classList.remove('hidden')
 		}
 	});
-	window.swup.hooks.on('visit:end', (_visit: {to: {url: string}}) => {
+	swup.hooks.on('visit:end', (_visit: {to: {url: string}}) => {
 		setTimeout(() => {
 			const heightExtend = document.getElementById('page-height-extend')
 			if (heightExtend) {
@@ -596,14 +599,17 @@ function createPhotoSwipe() {
 }
 
 const setup = () => {
+	const swup = window.swup;
+	if (!swup) return;
+
 	if (!lightbox) {
 		createPhotoSwipe()
 	}
-	window.swup.hooks.on("page:view", () => {
+	swup.hooks.on("page:view", () => {
 		createPhotoSwipe()
 	})
 
-	window.swup.hooks.on(
+	swup.hooks.on(
 		"content:replace",
 		() => {
 			lightbox?.destroy?.()

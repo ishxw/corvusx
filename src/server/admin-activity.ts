@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import { ADMIN_ACTIVITY_LOG_PATH, DATA_DIR } from "./paths";
+import { writeJsonAtomic } from "./file-utils";
 
 export type AdminActivity = {
 	id: string;
@@ -61,12 +62,7 @@ async function readActivities(): Promise<AdminActivity[]> {
 }
 
 async function writeActivities(items: AdminActivity[]) {
-	await ensureDir();
-	await fs.writeFile(
-		ADMIN_ACTIVITY_LOG_PATH,
-		`${JSON.stringify(items, null, 2)}\n`,
-		"utf8",
-	);
+	await writeJsonAtomic(ADMIN_ACTIVITY_LOG_PATH, items);
 }
 
 export async function logAdminActivity(action: string, detail: string) {

@@ -50,6 +50,10 @@ const uploadError = Astro.url.searchParams.get("error");
 						</div>
 					</label>
 
+					<label class="group flex items-center gap-3 rounded-[1.35rem] border border-black/5 bg-white/70 px-4 py-3 text-sm font-medium text-black/60 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.32)] transition-all hover:border-[var(--primary)]/18 hover:bg-white dark:border-white/5 dark:bg-black/20 dark:text-white/65 dark:hover:border-[var(--primary)]/18 dark:hover:bg-black/25">
+						<input type="checkbox" name="optimizeImage" value="true" checked data-upload-optimize class="h-6 w-6 shrink-0" />
+						<span class="flex-1 leading-tight">上传时自动优化并转为 WebP</span>
+					</label>
 					<button type="submit" class="btn-regular w-full rounded-2xl py-4 font-black shadow-lg" data-upload-button>
 						开始上传
 					</button>
@@ -94,7 +98,7 @@ const uploadError = Astro.url.searchParams.get("error");
 						/>
 					</div>
 					<div class="shrink-0 w-full sm:w-44">
-						<select data-media-standalone-sort class="w-full text-sm py-1.5">
+						<select data-media-standalone-sort class="w-full text-sm py-1.5" data-admin-cute-select data-admin-cute-select-variant="compact">
 							<option value="newest">最新上传</option>
 							<option value="oldest">最早上传</option>
 							<option value="name-asc">文件名 A-Z</option>
@@ -167,6 +171,7 @@ const uploadError = Astro.url.searchParams.get("error");
 		const uploadContainer = document.querySelector("[data-upload-container]");
 		const uploadPlaceholder = document.querySelector("[data-upload-placeholder]");
 		const uploadButton = document.querySelector("[data-upload-button]");
+		const uploadOptimize = document.querySelector("[data-upload-optimize]");
 
 		if (uploadInput instanceof HTMLInputElement && uploadContainer instanceof HTMLElement) {
 			uploadInput.addEventListener("change", () => {
@@ -208,11 +213,15 @@ const uploadError = Astro.url.searchParams.get("error");
 
 			const showToast = (message, tone = "success") => {
 				if (!(toast instanceof HTMLElement)) return;
-				toast.innerHTML = `<div class="flex items-center gap-3 rounded-2xl border px-6 py-4 shadow-2xl backdrop-blur-xl ${
-					tone === "success" 
-						? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" 
+				toast.replaceChildren();
+				const panel = document.createElement("div");
+				panel.className = `flex items-center gap-3 rounded-2xl border px-6 py-4 shadow-2xl backdrop-blur-xl ${
+					tone === "success"
+						? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
 						: "border-amber-500/20 bg-amber-500/10 text-amber-300"
-				}">${message}</div>`;
+				}`;
+				panel.textContent = String(message);
+				toast.append(panel);
 				toast.classList.remove("hidden");
 				window.setTimeout(() => toast.classList.add("hidden"), 2500);
 			};
@@ -267,6 +276,9 @@ const uploadError = Astro.url.searchParams.get("error");
 				if (!uploadInput.files?.length) return;
 
 				const formData = new FormData(uploadForm);
+				if (uploadOptimize instanceof HTMLInputElement) {
+					formData.set("optimizeImage", String(uploadOptimize.checked));
+				}
 				uploadButton.disabled = true;
 				uploadButton.textContent = "上传中...";
 
@@ -294,7 +306,7 @@ const uploadError = Astro.url.searchParams.get("error");
 
 			manager.addEventListener("click", async (event) => {
 				const target = event.target;
-				if (!(target instanceof HTMLElement)) return;
+				if (!(target instanceof Element)) return;
 
 				const copyButton = target.closest("[data-copy-value]");
 				if (copyButton instanceof HTMLElement) {

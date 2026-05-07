@@ -47,11 +47,7 @@ function buildPostRedirect(params: {
 	return query ? `${basePath}?${query}` : basePath;
 }
 
-export const POST: APIRoute = async ({ request, locals, redirect }) => {
-	if (!locals.adminUser) {
-		return redirect("/admin/login/");
-	}
-
+export const POST: APIRoute = async ({ request, redirect }) => {
 	const form = await request.formData();
 	const mode = String(form.get("mode") || "create");
 	const intent = String(form.get("intent") || "stay");

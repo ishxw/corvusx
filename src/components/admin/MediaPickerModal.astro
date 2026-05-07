@@ -46,6 +46,17 @@ const modalId = Astro.props.modalId || "admin-media-picker";
 							/>
 						</div>
 					</label>
+					<label class="group flex items-center gap-3 rounded-[1.35rem] border border-black/5 bg-white/70 px-4 py-3 text-sm font-medium text-black/60 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.32)] transition-all hover:border-[var(--primary)]/18 hover:bg-white dark:border-white/5 dark:bg-black/20 dark:text-white/65 dark:hover:border-[var(--primary)]/18 dark:hover:bg-black/25">
+						<input
+							type="checkbox"
+							name="optimizeImage"
+							value="true"
+							checked
+							data-media-optimize-input
+							class="h-6 w-6 accent-[var(--primary)]"
+						/>
+						<span class="flex-1 leading-tight">上传时自动优化并转为 WebP</span>
+					</label>
 					<button
 						type="submit"
 						class="btn-regular w-full rounded-2xl py-3.5 text-xs font-black uppercase tracking-widest shadow-lg"
@@ -86,7 +97,7 @@ const modalId = Astro.props.modalId || "admin-media-picker";
 							/>
 						</div>
 						<div class="shrink-0 w-full sm:w-40">
-							<select data-media-sort class="w-full !py-2.5 !text-xs">
+							<select data-media-sort class="w-full !py-2.5 !text-xs" data-admin-cute-select data-admin-cute-select-variant="compact">
 								<option value="newest">最新上传</option>
 								<option value="oldest">最早上传</option>
 								<option value="name-asc">A-Z</option>

@@ -1,4 +1,4 @@
----
+﻿---
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import { listAdminActivities } from "@/server/admin-activity";
 import { getAdminPostStatus } from "@/server/admin-post-status";
@@ -239,10 +239,10 @@ for (const post of paginatedPosts) {
 							/>
 						</div>
 					</div>
-					<div class="grid grid-cols-2 gap-4 xl:w-[15rem]">
+					<div class="grid grid-cols-2 gap-4 xl:w-[20rem]">
 						<div>
 							<div class="admin-label">发布状态</div>
-							<select name="status" class="w-full">
+							<select name="status" class="w-full" data-admin-cute-select>
 								<option value="all" selected={status === "all"}>全部</option>
 								<option value="published" selected={status === "published"}>已发布</option>
 								<option value="scheduled" selected={status === "scheduled"}>定时发布</option>
@@ -251,7 +251,7 @@ for (const post of paginatedPosts) {
 						</div>
 						<div>
 							<div class="admin-label">列表排序</div>
-							<select name="sort" class="w-full">
+							<select name="sort" class="w-full" data-admin-cute-select>
 								<option value="published-desc" selected={sort === "published-desc"}>最新发布</option>
 								<option value="published-asc" selected={sort === "published-asc"}>最早发布</option>
 								<option value="status" selected={sort === "status"}>按状态分组</option>
@@ -428,7 +428,7 @@ for (const post of paginatedPosts) {
 								<input type="hidden" name="sort" value={sort} />
 								<input type="hidden" name="q" value={queryInput} />
 								<div class="text-[11px] font-bold text-black/45 dark:text-white/45">每页显示</div>
-								<select name="pageSize" class="min-w-24 !rounded-xl !py-2 !text-xs" onchange="this.form.submit()">
+								<select name="pageSize" class="min-w-24 !rounded-xl !py-2 !text-xs" onchange="this.form.submit()" data-admin-cute-select data-admin-cute-select-variant="compact">
 									{allowedPageSizes.map((size) => (
 										<option value={size} selected={pageSize === size}>{size}</option>
 									))}

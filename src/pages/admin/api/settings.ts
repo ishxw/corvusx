@@ -78,11 +78,7 @@ function parseNavLinks(raw: string) {
 		.filter(isDefined);
 }
 
-export const POST: APIRoute = async ({ request, locals, redirect }) => {
-	if (!locals.adminUser) {
-		return redirect("/admin/login/");
-	}
-
+export const POST: APIRoute = async ({ request, redirect }) => {
 	const current = await getSiteSettings();
 	const form = await request.formData();
 

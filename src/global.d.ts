@@ -1,7 +1,35 @@
 declare global {
+	interface SwupHookRegistry {
+		on: (
+			event: string,
+			handler: (...args: any[]) => void,
+			options?: { before?: boolean },
+		) => void;
+	}
+
+	interface SwupHeadPluginLike {
+		options?: {
+			persistAssets?: boolean;
+			persistTags?: string;
+		};
+	}
+
+	interface SwupInstanceLike {
+		hooks: SwupHookRegistry;
+		findPlugin?: (name: string) => SwupHeadPluginLike | undefined;
+	}
+
+	interface TwikooInstanceLike {
+		init: (config: {
+			envId: string;
+			el: string;
+			path: string;
+			onCommentLoaded?: () => void;
+		}) => void;
+	}
+
 	interface Window {
-		// type from '@swup/astro' is incorrect
-		swup: unknown;
+		swup?: SwupInstanceLike;
 		showAdminToast?: (
 			message: string,
 			tone?: "success" | "rose" | "error" | "warning" | string,
@@ -27,11 +55,10 @@ declare global {
 		adminIsDirty?: boolean;
 		twikooEnable?: boolean;
 		twikooEnvId?: string;
-		twikoo?: {
-			// biome-ignore lint/suspicious/noExplicitAny: External library
-			init: (config: any) => void;
-		};
+		twikoo?: TwikooInstanceLike;
 	}
+
+	const twikoo: TwikooInstanceLike | undefined;
 }
 
 export {};

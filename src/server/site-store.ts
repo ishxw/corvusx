@@ -3,10 +3,7 @@ import path from "node:path";
 import type { AdminSiteSettings } from "@/types/admin";
 import { defaultSiteSettings } from "./defaults";
 import { DATA_DIR, SITE_SETTINGS_PATH } from "./paths";
-
-async function ensureDir(dir: string) {
-	await fs.mkdir(dir, { recursive: true });
-}
+import { writeJsonAtomic } from "./file-utils";
 
 let cachedSettings: AdminSiteSettings | null = null;
 let cachedSettingsMtimeMs: number | null = null;
@@ -67,12 +64,7 @@ export async function getSiteSettings(): Promise<AdminSiteSettings> {
 export async function saveSiteSettings(
 	settings: AdminSiteSettings,
 ): Promise<void> {
-	await ensureDir(DATA_DIR);
-	await fs.writeFile(
-		SITE_SETTINGS_PATH,
-		`${JSON.stringify(settings, null, 2)}\n`,
-		"utf8",
-	);
+	await writeJsonAtomic(SITE_SETTINGS_PATH, settings);
 	cachedSettings = settings;
 	cachedSettingsMtimeMs = await getSiteSettingsMtimeMs();
 }

@@ -1,4 +1,7 @@
 ---
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/700.css";
+import "@fontsource/roboto/900.css";
 import { siteConfig } from "@/config";
 import {
 	AUTO_MODE,
@@ -51,10 +54,6 @@ const favicons = await resolveFavicons(rawFavicons);
 			/>
 		))}
 		<style>
-			@import "@fontsource/roboto/400.css";
-			@import "@fontsource/roboto/700.css";
-			@import "@fontsource/roboto/900.css";
-
 			:root {
 				--p-primary: #a78bfa;
 				--p-secondary: #f472b6;
@@ -180,6 +179,12 @@ const favicons = await resolveFavicons(rawFavicons);
 		</script>
 	</head>
 	<body data-no-swup class="relative flex min-h-screen items-center justify-center p-6">
+		<a
+			href="/"
+			class="absolute left-6 top-6 rounded-2xl border border-white/50 bg-white/60 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-[var(--login-text)] backdrop-blur-md transition-all hover:scale-[1.02] hover:bg-white dark:border-white/10 dark:bg-white/10 dark:text-[var(--login-text-strong)] dark:hover:bg-white/15"
+		>
+			返回前台
+		</a>
 		<div class="blob left-10 top-10 h-64 w-64 rounded-full bg-purple-300 dark:bg-purple-500/30"></div>
 		<div class="blob bottom-10 right-10 h-80 w-80 rounded-full bg-pink-200 dark:bg-pink-500/20"></div>
 		<div class="blob left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100 dark:bg-amber-300/15"></div>

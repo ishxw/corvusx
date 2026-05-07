@@ -80,6 +80,9 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 	const uploadInput = modal.querySelector<HTMLInputElement>(
 		"[data-media-upload-input]",
 	);
+	const optimizeInput = modal.querySelector<HTMLInputElement>(
+		"[data-media-optimize-input]",
+	);
 	const uploadSubmit = modal.querySelector<HTMLButtonElement>(
 		"[data-media-upload-submit]",
 	);
@@ -94,6 +97,7 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 		!(sortSelect instanceof HTMLSelectElement) ||
 		!(uploadForm instanceof HTMLFormElement) ||
 		!(uploadInput instanceof HTMLInputElement) ||
+		!(optimizeInput instanceof HTMLInputElement) ||
 		!(uploadSubmit instanceof HTMLButtonElement)
 	) {
 		return;
@@ -373,6 +377,7 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 
 		const formData = new FormData();
 		formData.append("file", file);
+		formData.set("optimizeImage", String(optimizeInput.checked));
 		uploadSubmit.disabled = true;
 		setStatus("正在上传素材…");
 
@@ -444,7 +449,7 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 
 	document.addEventListener("click", (event) => {
 		const target = event.target;
-		if (!(target instanceof HTMLElement)) return;
+		if (!(target instanceof Element)) return;
 
 		const trigger = target.closest<HTMLElement>("[data-open-media-picker]");
 		if (trigger) {

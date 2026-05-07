@@ -1,11 +1,7 @@
 import type { APIRoute } from "astro";
 import { renderRuntimeMarkdown } from "@/server/runtime-markdown";
 
-export const POST: APIRoute = async ({ request, locals }) => {
-	if (!locals.adminUser) {
-		return new Response("Unauthorized", { status: 401 });
-	}
-
+export const POST: APIRoute = async ({ request }) => {
 	let markdown = "";
 	try {
 		const body = (await request.json()) as { markdown?: string };

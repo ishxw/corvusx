@@ -23,6 +23,19 @@ function jsonResponse(payload: unknown, status = 200): Response {
 	});
 }
 
+function parseOptimizeImageFlag(value: FormDataEntryValue | null): boolean {
+	if (typeof value !== "string") {
+		return true;
+	}
+
+	const normalized = value.trim().toLowerCase();
+	if (!normalized) {
+		return true;
+	}
+
+	return !["0", "false", "off", "no"].includes(normalized);
+}
+
 export const GET: APIRoute = async ({ locals }) => {
 	if (!locals.adminUser) {
 		return jsonResponse({ error: "Unauthorized" }, 401);
@@ -39,6 +52,7 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 
 	const form = await request.formData();
 	const file = form.get("file");
+	const optimizeImage = parseOptimizeImageFlag(form.get("optimizeImage"));
 
 	if (!(file instanceof File)) {
 		if (wantsJson(request)) {
@@ -49,7 +63,7 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 
 	let item;
 	try {
-		item = await saveAdminMediaFile(file);
+		item = await saveAdminMediaFile(file, { optimizeImage });
 	} catch (error) {
 		const message =
 			error instanceof Error ? error.message : "Failed to upload file";

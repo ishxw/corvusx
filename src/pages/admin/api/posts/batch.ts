@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
+import { requireSameOriginAdminRequest } from "@/server/admin-request";
 import {
 	deleteAdminPost,
 	getAdminPost,
@@ -158,6 +159,10 @@ async function updatePublishAt(
 
 export const POST: APIRoute = async ({ request, locals, redirect }) => {
 	if (!locals.adminUser) {
+		return redirect("/admin/login/");
+	}
+	const originError = requireSameOriginAdminRequest(request);
+	if (originError) {
 		return redirect("/admin/login/");
 	}
 

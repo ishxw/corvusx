@@ -4,6 +4,19 @@ import { createSessionToken, verifyAdminCredentials } from "@/server/auth";
 
 // Simple in-memory rate limiting
 const loginAttempts = new Map<string, { count: number; lockUntil: number }>();
+const RATE_LIMIT_WINDOW_MS = 1000 * 60 * 15;
+
+function cleanupLoginAttempts(now: number) {
+	for (const [key, attempt] of loginAttempts.entries()) {
+		if (attempt.lockUntil !== 0 && attempt.lockUntil < now - RATE_LIMIT_WINDOW_MS) {
+			loginAttempts.delete(key);
+			continue;
+		}
+		if (attempt.lockUntil === 0 && attempt.count === 0) {
+			loginAttempts.delete(key);
+		}
+	}
+}
 
 export const POST: APIRoute = async ({
 	request,
@@ -15,18 +28,20 @@ export const POST: APIRoute = async ({
 	const form = await request.formData();
 	const username = String(form.get("username") || "").trim();
 	const password = String(form.get("password") || "");
+	const now = Date.now();
+
+	cleanupLoginAttempts(now);
 
 	// Rate limit check
 	const clientKey = `${clientAddress}_${username}`;
 	const attempt = loginAttempts.get(clientKey);
-	if (attempt && attempt.lockUntil > Date.now()) {
-		const remaining = Math.ceil((attempt.lockUntil - Date.now()) / 1000 / 60);
+	if (attempt && attempt.lockUntil > now) {
+		const remaining = Math.ceil((attempt.lockUntil - now) / 1000 / 60);
 		return redirect(`/admin/login/?error=rate-limit&minutes=${remaining}`);
 	}
 
 	const ok = await verifyAdminCredentials(username, password);
 	if (!ok) {
-		const now = Date.now();
 		const current = loginAttempts.get(clientKey) || { count: 0, lockUntil: 0 };
 		current.count += 1;
 		if (current.count >= 3) {

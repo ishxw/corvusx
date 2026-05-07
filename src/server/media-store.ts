@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 
 export type AdminMediaItem = {
 	name: string;
@@ -8,8 +9,13 @@ export type AdminMediaItem = {
 	modifiedAt: string;
 };
 
+export type SaveAdminMediaOptions = {
+	optimizeImage?: boolean;
+};
+
 const UPLOAD_DIR = path.resolve("data/uploads");
 const MAX_MEDIA_FILE_SIZE = 10 * 1024 * 1024;
+const DEFAULT_OPTIMIZE_IMAGES = true;
 const ALLOWED_MEDIA_EXTENSIONS = new Set([
 	".png",
 	".jpg",
@@ -35,8 +41,6 @@ export function toMediaUrl(fileName: string): string {
 }
 
 export function sanitizeMediaName(fileName: string): string {
-	// Remove characters that are definitely illegal in file systems or problematic in URLs
-	// But preserve characters that are valid in most modern OSs and URL paths (like Chinese characters)
 	return (
 		fileName
 			// biome-ignore lint/suspicious/noControlCharactersInRegex: Required for sanitizing file names
@@ -108,17 +112,25 @@ export async function listAdminMedia(): Promise<AdminMediaItem[]> {
 	return items.sort((a, b) => (a.modifiedAt < b.modifiedAt ? 1 : -1));
 }
 
-export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
+export async function saveAdminMediaFile(
+	file: File,
+	options: SaveAdminMediaOptions = {},
+): Promise<AdminMediaItem> {
 	await ensureUploadDir();
 	ensureMediaFileSize(file);
 	ensureMediaMimeType(file);
 
 	const originalName = ensureMediaFileName(file.name || "upload.bin");
-	const ext = path.extname(originalName);
+	const ext = path.extname(originalName).toLowerCase();
 	ensureMediaExtension(originalName);
+
+	const optimizeImage = options.optimizeImage ?? DEFAULT_OPTIMIZE_IMAGES;
+	const canOptimizeImage = [".png", ".jpg", ".jpeg", ".webp"].includes(ext);
+	const shouldConvertToWebp = canOptimizeImage && optimizeImage;
+	const targetExt = shouldConvertToWebp ? ".webp" : ext;
 	const baseName = path.basename(originalName, ext);
 
-	let fileName = originalName;
+	let fileName = shouldConvertToWebp ? `${baseName}.webp` : originalName;
 	let targetPath = resolveUploadFilePath(fileName);
 	let counter = 1;
 
@@ -128,13 +140,23 @@ export async function saveAdminMediaFile(file: File): Promise<AdminMediaItem> {
 			.then(() => true)
 			.catch(() => false)
 	) {
-		fileName = `${baseName}-${counter}${ext}`;
+		fileName = `${baseName}-${counter}${targetExt}`;
 		targetPath = resolveUploadFilePath(fileName);
 		counter++;
 	}
 
 	const arrayBuffer = await file.arrayBuffer();
-	await fs.writeFile(targetPath, new Uint8Array(arrayBuffer));
+	const bytes = new Uint8Array(arrayBuffer);
+
+	if (shouldConvertToWebp) {
+		// Optimize supported raster uploads and normalize them to WebP.
+		await sharp(bytes)
+			.resize({ width: 2000, withoutEnlargement: true })
+			.webp({ quality: 80, effort: 6 })
+			.toFile(targetPath);
+	} else {
+		await fs.writeFile(targetPath, bytes);
+	}
 
 	const stats = await fs.stat(targetPath);
 	return {
@@ -161,7 +183,6 @@ export async function renameAdminMedia(
 	const oldExt = path.extname(oldBasename);
 	let safeNewName = ensureMediaFileName(newName);
 
-	// If the new name doesn't have an extension, preserve the old one
 	if (path.extname(safeNewName) === "" && oldExt !== "") {
 		safeNewName += oldExt;
 	}
@@ -170,7 +191,6 @@ export async function renameAdminMedia(
 	const oldPath = resolveUploadFilePath(oldBasename);
 	const newPath = resolveUploadFilePath(safeNewName);
 
-	// Case-insensitive check: if names differ ONLY in case, skip existence check
 	const isCaseOnlyChange =
 		oldBasename.toLowerCase() === safeNewName.toLowerCase() &&
 		oldBasename !== safeNewName;
@@ -200,5 +220,6 @@ export function getMediaUploadConstraints() {
 	return {
 		maxBytes: MAX_MEDIA_FILE_SIZE,
 		allowedExtensions: [...ALLOWED_MEDIA_EXTENSIONS],
+		defaultOptimizeImages: DEFAULT_OPTIMIZE_IMAGES,
 	};
 }

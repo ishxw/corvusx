@@ -15,11 +15,8 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import remarkSectionize from "remark-sectionize";
 import { unified } from "unified";
-// @ts-expect-error
 import { AdmonitionComponent } from "@/plugins/rehype-component-admonition.mjs";
-// @ts-expect-error
 import { GithubCardComponent } from "@/plugins/rehype-component-github-card.mjs";
-// @ts-expect-error
 import { parseDirectiveNode } from "@/plugins/remark-directive-rehype";
 
 export type RuntimeHeading = {
@@ -95,15 +92,35 @@ export async function renderRuntimeMarkdown(markdown: string): Promise<{
 					// biome-ignore lint/suspicious/noExplicitAny: Expected usage in rehype
 					github: GithubCardComponent as any,
 					note: (props: Record<string, unknown>, children: unknown) =>
-						AdmonitionComponent(props, children, "note"),
+						AdmonitionComponent(
+							props,
+							Array.isArray(children) ? children : [],
+							"note",
+						),
 					tip: (props: Record<string, unknown>, children: unknown) =>
-						AdmonitionComponent(props, children, "tip"),
+						AdmonitionComponent(
+							props,
+							Array.isArray(children) ? children : [],
+							"tip",
+						),
 					important: (props: Record<string, unknown>, children: unknown) =>
-						AdmonitionComponent(props, children, "important"),
+						AdmonitionComponent(
+							props,
+							Array.isArray(children) ? children : [],
+							"important",
+						),
 					caution: (props: Record<string, unknown>, children: unknown) =>
-						AdmonitionComponent(props, children, "caution"),
+						AdmonitionComponent(
+							props,
+							Array.isArray(children) ? children : [],
+							"caution",
+						),
 					warning: (props: Record<string, unknown>, children: unknown) =>
-						AdmonitionComponent(props, children, "warning"),
+						AdmonitionComponent(
+							props,
+							Array.isArray(children) ? children : [],
+							"warning",
+						),
 				},
 				// biome-ignore lint/suspicious/noExplicitAny: Expected usage in rehype
 			} as any,

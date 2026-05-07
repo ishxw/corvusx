@@ -216,10 +216,10 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 							No Banner
 						</div>
 					</div>
-					<div class="grid grid-cols-2 gap-4">
+					<div class="grid grid-cols-2 gap-4 xl:w-[20rem]">
 						<label class="block">
 							<div class="admin-label">显示模式</div>
-							<select name="bannerPosition" class="w-full">
+							<select name="bannerPosition" class="w-full" data-admin-cute-select>
 								<option value="top" selected={settings.bannerPosition === "top"}>顶部 (Top)</option>
 								<option value="center" selected={settings.bannerPosition === "center"}>居中 (Center)</option>
 								<option value="bottom" selected={settings.bannerPosition === "bottom"}>底部 (Bottom)</option>
@@ -333,7 +333,7 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 				<div class="space-y-8">
 					<label class="block">
 						<div class="admin-label">目录 (TOC) 深度</div>
-						<select name="tocDepth" class="w-full">
+						<select name="tocDepth" class="w-full" data-admin-cute-select>
 							<option value="1" selected={settings.tocDepth === 1}>仅一级标题</option>
 							<option value="2" selected={settings.tocDepth === 2}>显示到二级标题</option>
 							<option value="3" selected={settings.tocDepth === 3}>显示到三级标题</option>
