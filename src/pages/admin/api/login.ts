@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { logAdminActivity } from "@/server/admin-activity";
+import { isHttpsRequest } from "@/server/admin-request";
 import { createSessionToken, verifyAdminCredentials } from "@/server/auth";
 
 // Simple in-memory rate limiting
@@ -22,7 +23,6 @@ export const POST: APIRoute = async ({
 	request,
 	cookies,
 	redirect,
-	url,
 	clientAddress,
 }) => {
 	const form = await request.formData();
@@ -56,7 +56,7 @@ export const POST: APIRoute = async ({
 	loginAttempts.delete(clientKey);
 
 	const token = await createSessionToken(username);
-	const secure = url.protocol === "https:";
+	const secure = isHttpsRequest(request);
 
 	cookies.set("corvusx_admin_session", token, {
 		path: "/",
