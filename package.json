@@ -68,7 +68,7 @@
     "sharp": "^0.34.5",
     "sirv": "^3.0.2",
     "stylus": "^0.64.0",
-    "svelte": "^5.39.8",
+    "svelte": "^5.55.5",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
     "unified": "^11.0.5",
