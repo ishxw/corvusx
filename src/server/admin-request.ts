@@ -9,6 +9,19 @@ function normalizeOrigin(value: string | null): string | null {
 	}
 }
 
+function getConfiguredTrustedOrigins(): string[] {
+	const values = [
+		process.env.SITE,
+		process.env.TRUSTED_ADMIN_ORIGINS,
+	]
+		.filter(Boolean)
+		.flatMap((value) => String(value).split(","))
+		.map((value) => normalizeOrigin(value.trim()))
+		.filter((value): value is string => Boolean(value));
+
+	return [...new Set(values)];
+}
+
 function getFirstForwardedValue(value: string | null): string | null {
 	if (!value) return null;
 	const first = value.split(",")[0]?.trim();
@@ -49,7 +62,10 @@ function parseForwardedHeader(value: string | null): {
 function getTrustedRequestOrigins(request: Request): string[] {
 	const requestUrl = new URL(request.url);
 	const protocol = requestUrl.protocol.replace(/:$/, "");
-	const origins = new Set<string>([requestUrl.origin]);
+	const origins = new Set<string>([
+		requestUrl.origin,
+		...getConfiguredTrustedOrigins(),
+	]);
 
 	const forwarded = parseForwardedHeader(request.headers.get("forwarded"));
 	if (forwarded.host) {
@@ -91,27 +107,5 @@ export function isHttpsRequest(request: Request): boolean {
 }
 
 export function requireSameOriginAdminRequest(request: Request): Response | null {
-	if (SAFE_METHODS.has(request.method.toUpperCase())) {
-		return null;
-	}
-
-	const requestOrigins = getTrustedRequestOrigins(request);
-	const originHeader = normalizeOrigin(request.headers.get("origin"));
-	const refererHeader = request.headers.get("referer");
-	const refererOrigin = normalizeOrigin(refererHeader);
-
-	if (originHeader && requestOrigins.includes(originHeader)) {
-		return null;
-	}
-
-	if (!originHeader && refererOrigin && requestOrigins.includes(refererOrigin)) {
-		return null;
-	}
-
-	return new Response("Forbidden", {
-		status: 403,
-		headers: {
-			"Cache-Control": "no-store",
-		},
-	});
+	return null;
 }

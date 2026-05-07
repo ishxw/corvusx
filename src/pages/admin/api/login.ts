@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { ensureAdminCsrfToken, isValidAdminCsrfToken } from "@/server/admin-csrf";
 import { logAdminActivity } from "@/server/admin-activity";
 import { isHttpsRequest } from "@/server/admin-request";
 import { createSessionToken, verifyAdminCredentials } from "@/server/auth";
@@ -25,7 +26,12 @@ export const POST: APIRoute = async ({
 	redirect,
 	clientAddress,
 }) => {
+	ensureAdminCsrfToken(cookies, request);
 	const form = await request.formData();
+	const csrfToken = String(form.get("csrfToken") || "");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		return redirect("/admin/login/?error=origin");
+	}
 	const username = String(form.get("username") || "").trim();
 	const password = String(form.get("password") || "");
 	const now = Date.now();

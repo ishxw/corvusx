@@ -25,6 +25,10 @@ if (error === "invalid" || error === "1") {
 	errorMessage = `尝试次数过多，请在 ${minutes || 5} 分钟后再试。`;
 }
 
+if (error === "origin") {
+	errorMessage = "当前请求来源校验失败，请检查 CDN / 反向代理的域名与协议转发配置。";
+}
+
 const { siteConfig: runtimeSiteConfig } = await getRuntimeState();
 const activeSiteConfig = runtimeSiteConfig || siteConfig;
 const siteTitle = activeSiteConfig.title || "Corvusx";

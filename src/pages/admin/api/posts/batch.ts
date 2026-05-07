@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
+import { isValidAdminCsrfToken } from "@/server/admin-csrf";
 import { logAdminActivity } from "@/server/admin-activity";
-import { requireSameOriginAdminRequest } from "@/server/admin-request";
 import {
 	deleteAdminPost,
 	getAdminPost,
@@ -157,16 +157,16 @@ async function updatePublishAt(
 	return count;
 }
 
-export const POST: APIRoute = async ({ request, locals, redirect }) => {
+export const POST: APIRoute = async ({ request, cookies, locals, redirect }) => {
 	if (!locals.adminUser) {
-		return redirect("/admin/login/");
-	}
-	const originError = requireSameOriginAdminRequest(request);
-	if (originError) {
 		return redirect("/admin/login/");
 	}
 
 	const form = await request.formData();
+	const csrfToken = String(form.get("csrfToken") || "");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		return redirect("/admin/login/?error=origin");
+	}
 	const action = String(form.get("action") || "") as BatchAction;
 	const status = String(form.get("status") || "all");
 	const sort = String(form.get("sort") || "published-desc");

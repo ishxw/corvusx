@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { isValidAdminCsrfToken } from "@/server/admin-csrf";
 import { logAdminActivity } from "@/server/admin-activity";
 import { defaultSiteSettings } from "@/server/defaults";
 import { getSiteSettings, saveSiteSettings } from "@/server/site-store";
@@ -78,9 +79,13 @@ function parseNavLinks(raw: string) {
 		.filter(isDefined);
 }
 
-export const POST: APIRoute = async ({ request, redirect }) => {
+export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 	const current = await getSiteSettings();
 	const form = await request.formData();
+	const csrfToken = String(form.get("csrfToken") || "");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		return redirect("/admin/login/?error=origin");
+	}
 
 	const profileLinksJson = String(
 		form.get("profileLinksJson") || JSON.stringify(current.profileLinks),

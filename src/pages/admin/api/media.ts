@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { isValidAdminCsrfToken } from "@/server/admin-csrf";
 import { logAdminActivity } from "@/server/admin-activity";
 import {
 	deleteAdminMedia,
@@ -45,12 +46,19 @@ export const GET: APIRoute = async ({ locals }) => {
 	return jsonResponse({ items, constraints: getMediaUploadConstraints() });
 };
 
-export const POST: APIRoute = async ({ request, locals, redirect }) => {
+export const POST: APIRoute = async ({ request, cookies, locals, redirect }) => {
 	if (!locals.adminUser) {
 		return redirect("/admin/login/");
 	}
 
 	const form = await request.formData();
+	const csrfToken = String(form.get("csrfToken") || "");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		if (wantsJson(request)) {
+			return jsonResponse({ error: "Forbidden" }, 403);
+		}
+		return redirect("/admin/login/?error=origin");
+	}
 	const file = form.get("file");
 	const optimizeImage = parseOptimizeImageFlag(form.get("optimizeImage"));
 
@@ -82,9 +90,14 @@ export const POST: APIRoute = async ({ request, locals, redirect }) => {
 	return redirect("/admin/media/?success=1");
 };
 
-export const DELETE: APIRoute = async ({ request, locals }) => {
+export const DELETE: APIRoute = async ({ request, cookies, locals }) => {
 	if (!locals.adminUser) {
 		return jsonResponse({ error: "Unauthorized" }, 401);
+	}
+
+	const csrfToken = request.headers.get("x-csrf-token");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		return jsonResponse({ error: "Forbidden" }, 403);
 	}
 
 	const { file } = (await request.json()) as { file?: string };
@@ -97,9 +110,14 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
 	return jsonResponse({ ok: true });
 };
 
-export const PUT: APIRoute = async ({ request, locals }) => {
+export const PUT: APIRoute = async ({ request, cookies, locals }) => {
 	if (!locals.adminUser) {
 		return jsonResponse({ error: "Unauthorized" }, 401);
+	}
+
+	const csrfToken = request.headers.get("x-csrf-token");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		return jsonResponse({ error: "Forbidden" }, 403);
 	}
 
 	const { oldName, newName } = (await request.json()) as {

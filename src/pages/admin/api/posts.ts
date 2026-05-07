@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { isValidAdminCsrfToken } from "@/server/admin-csrf";
 import { logAdminActivity } from "@/server/admin-activity";
 import {
 	getAdminPost,
@@ -47,8 +48,12 @@ function buildPostRedirect(params: {
 	return query ? `${basePath}?${query}` : basePath;
 }
 
-export const POST: APIRoute = async ({ request, redirect }) => {
+export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 	const form = await request.formData();
+	const csrfToken = String(form.get("csrfToken") || "");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		return redirect("/admin/login/?error=origin");
+	}
 	const mode = String(form.get("mode") || "create");
 	const intent = String(form.get("intent") || "stay");
 	const slug = String(form.get("slug") || "").replace(/^\/|\/$/g, "");

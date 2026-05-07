@@ -1,7 +1,13 @@
 import type { APIRoute } from "astro";
+import { isValidAdminCsrfToken } from "@/server/admin-csrf";
 import { renderRuntimeMarkdown } from "@/server/runtime-markdown";
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
+	const csrfToken = request.headers.get("x-csrf-token");
+	if (!isValidAdminCsrfToken(cookies, csrfToken)) {
+		return new Response("Forbidden", { status: 403 });
+	}
+
 	let markdown = "";
 	try {
 		const body = (await request.json()) as { markdown?: string };

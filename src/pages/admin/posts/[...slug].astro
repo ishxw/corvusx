@@ -283,6 +283,12 @@ const tagSuggestions = Array.from(
 				slugInput.value = window.location.pathname.split("/").filter(Boolean).pop();
 				deleteForm.appendChild(slugInput);
 
+				const csrfInput = document.createElement("input");
+				csrfInput.type = "hidden";
+				csrfInput.name = "csrfToken";
+				csrfInput.value = window.getAdminCsrfToken?.() || "";
+				deleteForm.appendChild(csrfInput);
+
 				document.body.appendChild(deleteForm);
 				deleteForm.submit();
 			}

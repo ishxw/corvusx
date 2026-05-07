@@ -9,6 +9,7 @@ import "@/styles/markdown-extend.styl";
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import { profileConfig, siteConfig } from "@/config";
 import { defaultFavicons } from "@/constants/icon";
+import { ensureAdminCsrfToken } from "@/server/admin-csrf";
 import { resolveFavicons } from "@/server/favicon";
 import { getRuntimeState } from "@/server/runtime-state";
 import type { Favicon } from "@/types/config";
@@ -46,6 +47,7 @@ const rawFavicons: Favicon[] =
 		? activeSiteConfig.favicon
 		: defaultFavicons;
 const favicons = await resolveFavicons(rawFavicons);
+const csrfToken = ensureAdminCsrfToken(Astro.cookies, Astro.request);
 ---
 
 <!DOCTYPE html>
@@ -54,6 +56,7 @@ const favicons = await resolveFavicons(rawFavicons);
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="author" content={activeProfileConfig.name} />
+		<meta name="admin-csrf-token" content={csrfToken} />
 		<title>{pageTitle}</title>
 		{favicons.map((favicon) => (
 			<link
@@ -405,6 +408,81 @@ const favicons = await resolveFavicons(rawFavicons);
 			// Initial Toasts from Server
 			if (success) window.showAdminToast(success, 'success');
 			if (error) window.showAdminToast(error, 'error');
+		</script>
+		<script is:inline>
+			if (!window.__adminCsrfInitialized) {
+				window.__adminCsrfInitialized = true;
+
+				window.getAdminCsrfToken = () =>
+					document
+						.querySelector('meta[name="admin-csrf-token"]')
+						?.getAttribute('content') || '';
+
+				window.appendAdminCsrfField = (form) => {
+					if (!(form instanceof HTMLFormElement)) return;
+					const token = window.getAdminCsrfToken?.();
+					if (!token) return;
+					let field = form.querySelector('input[name="csrfToken"]');
+					if (!(field instanceof HTMLInputElement)) {
+						field = document.createElement('input');
+						field.type = 'hidden';
+						field.name = 'csrfToken';
+						form.append(field);
+					}
+					field.value = token;
+				};
+
+				window.ensureAdminCsrfFields = () => {
+					document
+						.querySelectorAll('form[action^="/admin/api/"]')
+						.forEach((form) => {
+							if (form instanceof HTMLFormElement) {
+								window.appendAdminCsrfField?.(form);
+							}
+						});
+				};
+
+				const originalFetch = window.fetch.bind(window);
+				window.fetch = (input, init) => {
+					const method = (
+						init?.method ||
+						(input instanceof Request ? input.method : 'GET')
+					).toUpperCase();
+
+					let requestUrl = null;
+					if (typeof input === 'string' || input instanceof URL) {
+						requestUrl = new URL(String(input), window.location.origin);
+					} else if (input instanceof Request) {
+						requestUrl = new URL(input.url);
+					}
+
+					if (
+						requestUrl &&
+						requestUrl.origin === window.location.origin &&
+						requestUrl.pathname.startsWith('/admin/api/') &&
+						!['GET', 'HEAD', 'OPTIONS'].includes(method)
+					) {
+						const headers = new Headers(
+							init?.headers || (input instanceof Request ? input.headers : undefined),
+						);
+						const token = window.getAdminCsrfToken?.();
+						if (token && !headers.has('x-csrf-token')) {
+							headers.set('x-csrf-token', token);
+						}
+						return originalFetch(input, { ...init, headers });
+					}
+
+					return originalFetch(input, init);
+				};
+			}
+
+			window.ensureAdminCsrfFields?.();
+			document.addEventListener('astro:page-load', () => {
+				window.ensureAdminCsrfFields?.();
+			});
+			document.addEventListener('astro:after-swap', () => {
+				window.ensureAdminCsrfFields?.();
+			});
 		</script>
 		<script>
 			import "@/components/admin/CuteSelectEnhancer.client";
