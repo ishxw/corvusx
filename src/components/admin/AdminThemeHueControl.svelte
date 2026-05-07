@@ -10,6 +10,7 @@ export let name = "themeHue";
 
 let hue = initialHue;
 let rangeEl: HTMLInputElement;
+let hasInteracted = false;
 
 function applyHue() {
 	if (typeof document === "undefined") return;
@@ -18,18 +19,27 @@ function applyHue() {
 	// which is saved via the form submission.
 }
 
+function previewHue() {
+	hasInteracted = true;
+}
+
 async function resetHue() {
+	hasInteracted = true;
 	hue = defaultHue;
 	await tick();
 	rangeEl?.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-$: if (hue || hue === 0) {
+$: if (hasInteracted && (hue || hue === 0)) {
 	applyHue();
 }
 </script>
 
-<div id="display-setting" class="dark admin-theme-hue-control float-panel transition-all w-80 px-4 py-4">
+<div
+	id="display-setting"
+	class="dark admin-theme-hue-control float-panel transition-all w-80 px-4 py-4"
+	style={`--hue:${hue};`}
+>
 	<div class="flex flex-row gap-2 mb-3 items-center justify-between">
 		<div
 			class="flex gap-2 font-bold text-lg text-neutral-900 dark:text-neutral-100 transition relative ml-3
@@ -71,6 +81,7 @@ $: if (hue || hue === 0) {
 			min="0"
 			max="360"
 			bind:value={hue}
+			on:input={previewHue}
 			class="slider"
 			id="colorSlider"
 			step="5"

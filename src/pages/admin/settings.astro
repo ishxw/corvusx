@@ -149,11 +149,14 @@ const defaultThemeHue = siteConfig.themeColor.hue;
 					</div>
 					<div class="rounded-[2rem] bg-black/[0.03] p-5 dark:bg-white/[0.03]">
 						<AdminThemeHueControl
-							client:load
+							client:only="svelte"
 							initialHue={settings.themeHue}
 							defaultHue={defaultThemeHue}
 							name="themeHue"
 						/>
+						<p class="mt-4 text-xs leading-relaxed text-black/40 dark:text-white/40">
+							当前页面会优先沿用你在前台最近使用的主题色。这里的滑块修改的是站点默认主题色，拖动后会先预览，保存成功后再同步到当前浏览器会话。
+						</p>
 					</div>
 				</div>
 			</div>

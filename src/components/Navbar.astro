@@ -37,7 +37,9 @@ let links: NavBarLink[] = (
 		</a>
 		<div class="hidden md:flex">
 			{links.map((l) => {
-				return <a aria-label={l.name} href={l.external ? l.url : url(l.url)} target={l.external ? "_blank" : null}
+				const href = l.external ? l.url : url(l.url);
+				return <a aria-label={l.name} href={href} target={l.external ? "_blank" : null}
+						  data-no-swup={(!l.external && href.includes("/admin/")) || undefined}
 						  class="btn-plain scale-animation rounded-lg h-11 px-5 font-bold active:scale-95"
 				>
 					<div class="flex items-center">
@@ -58,7 +60,8 @@ let links: NavBarLink[] = (
 			<LightDarkSwitch></LightDarkSwitch>
 			<a
 				aria-label="Admin"
-				href="/admin/"
+				href={url("/admin/")}
+				data-no-swup
 				title="进入后台"
 				class="btn-plain scale-animation h-11 w-11 rounded-lg active:scale-90"
 			>
