@@ -2,6 +2,7 @@
 import MediaPickerModal from "@/components/admin/MediaPickerModal.astro";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import { getAdminPostStatus } from "@/server/admin-post-status";
+import { resolveAdminPreviewUrl } from "@/server/admin-preview";
 import { getAdminPost, listAdminPosts } from "@/server/post-store";
 
 if (!Astro.locals.adminUser) {
@@ -19,9 +20,10 @@ const publishAtValue = post.publishAt ? post.publishAt.slice(0, 16) : "";
 const statusInfo = getAdminPostStatus(post);
 const previewUrl = `/posts/${post.slug}/?preview=1`;
 const posts = await listAdminPosts();
+const coverPreview = await resolveAdminPreviewUrl(post.image, post.sourcePath);
 const categorySuggestions = Array.from(
 	new Set(posts.map((item) => item.category.trim()).filter(Boolean)),
-).slice(0, 10);
+	).slice(0, 10);
 const tagSuggestions = Array.from(
 	new Set(
 		posts.flatMap((item) => item.tags.map((tag) => tag.trim())).filter(Boolean),
@@ -141,13 +143,13 @@ const tagSuggestions = Array.from(
 					<label class="block">
 						<div class="admin-label">封面图片 (Cover)</div>
 						<div class="flex gap-3">
-							<input id="image" name="image" value={post.image} data-media-input class="flex-1" />
+							<input id="image" name="image" value={post.image} data-media-input data-media-source-path={post.sourcePath || ""} class="flex-1" />
 							<button type="button" data-open-media-picker data-target-input="image" data-picker-label="为文章选择封面图" class="btn-plain shrink-0 rounded-2xl px-5 font-bold text-sm">选择</button>
 						</div>
 					</label>
 					<div class="relative aspect-[21/9] w-full overflow-hidden rounded-[2.5rem] border-2 border-dashed border-black/5 bg-black/[0.02] dark:border-white/5 dark:bg-white/[0.02]">
-						<img data-media-preview-for="image" alt="封面预览" class:list={["h-full w-full object-cover transition-opacity duration-700", !post.image && "opacity-0"]} src={post.image || undefined} />
-						<div data-media-preview-empty="image" class:list={["absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase tracking-[0.2em] text-black/20 dark:text-white/10", post.image && "hidden"]}>
+						<img data-media-preview-for="image" alt="封面预览" class:list={["h-full w-full object-cover transition-opacity duration-700", !coverPreview.isResolvable && "hidden"]} src={coverPreview.isResolvable ? coverPreview.value : undefined} />
+						<div data-media-preview-empty="image" class:list={["absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase tracking-[0.2em] text-black/20 dark:text-white/10", coverPreview.isResolvable && "hidden"]}>
 							No Image Selected
 						</div>
 					</div>

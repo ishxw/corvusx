@@ -154,6 +154,7 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 			if (!(input instanceof HTMLInputElement)) continue;
 
 			const rawValue = input.value.trim();
+			const sourcePath = input.dataset.mediaSourcePath || "";
 			const empty = document.querySelector<HTMLElement>(
 				`[data-media-preview-empty="${fieldId}"]`,
 			);
@@ -178,8 +179,14 @@ function initAdminMediaPicker(options: MediaPickerOptions) {
 			}
 
 			try {
+				const searchParams = new URLSearchParams({
+					value: rawValue,
+				});
+				if (sourcePath) {
+					searchParams.set("sourcePath", sourcePath);
+				}
 				const response = await fetch(
-					`/admin/api/resolve-preview-url/?value=${encodeURIComponent(rawValue)}`,
+					`/admin/api/resolve-preview-url/?${searchParams.toString()}`,
 					{
 						headers: { Accept: "application/json" },
 						cache: "no-store",

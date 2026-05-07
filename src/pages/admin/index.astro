@@ -167,7 +167,7 @@ const aboutPreview = settings.aboutMarkdown
 // Resolve images for visible posts only to keep the admin index responsive.
 for (const post of paginatedPosts) {
 	if (post.image) {
-		const resolved = await resolveAdminPreviewUrl(post.image);
+		const resolved = await resolveAdminPreviewUrl(post.image, post.sourcePath);
 		if (resolved.isResolvable) {
 			(post as unknown as PostWithResolvedImage).resolvedImage = resolved.value;
 		}

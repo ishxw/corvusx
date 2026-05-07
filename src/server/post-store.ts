@@ -22,6 +22,15 @@ async function ensureDir(dir: string) {
 	await fs.mkdir(dir, { recursive: true });
 }
 
+async function pathExists(targetPath: string): Promise<boolean> {
+	try {
+		await fs.access(targetPath);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 function normalizeFrontmatterDate(
 	value: string | Date | undefined,
 ): string | undefined {
@@ -97,15 +106,65 @@ function toSlug(filePath: string): string {
 	return relativePath;
 }
 
-function fromSlug(slug: string): string {
+type PostPathStyle = "flat" | "index";
+
+function buildPathFromSlug(
+	slug: string,
+	style?: PostPathStyle,
+): string {
 	if (!slug || slug === "/") {
 		return path.join(POSTS_DIR, "index.md");
 	}
 	const normalized = slug.replace(/^\/|\/$/g, "");
-	if (normalized.includes("/")) {
+	const resolvedStyle =
+		style ?? (normalized.includes("/") ? "index" : "flat");
+	if (resolvedStyle === "index") {
 		return path.join(POSTS_DIR, normalized, "index.md");
 	}
 	return path.join(POSTS_DIR, `${normalized}.md`);
+}
+
+async function resolveExistingPostPath(slug: string): Promise<string | null> {
+	if (!slug || slug === "/") {
+		const rootPath = path.join(POSTS_DIR, "index.md");
+		return (await pathExists(rootPath)) ? rootPath : null;
+	}
+
+	const normalized = slug.replace(/^\/|\/$/g, "");
+	const candidates = [
+		buildPathFromSlug(normalized, "flat"),
+		buildPathFromSlug(normalized, "index"),
+	];
+
+	for (const candidate of candidates) {
+		if (await pathExists(candidate)) {
+			return candidate;
+		}
+	}
+
+	return null;
+}
+
+function inferPathStyle(sourcePath?: string): PostPathStyle | undefined {
+	if (!sourcePath) return undefined;
+	return sourcePath.replace(/\\/g, "/").endsWith("/index.md")
+		? "index"
+		: "flat";
+}
+
+async function cleanupEmptyParentDirs(targetPath: string): Promise<void> {
+	let currentDir = path.dirname(targetPath);
+
+	while (currentDir !== POSTS_DIR && currentDir.startsWith(POSTS_DIR)) {
+		try {
+			const entries = await fs.readdir(currentDir);
+			if (entries.length > 0) return;
+			await fs.rmdir(currentDir);
+			currentDir = path.dirname(currentDir);
+		} catch {
+			return;
+		}
+	}
 }
 
 function parseFrontmatter(filePath: string, raw: string): AdminPost {
@@ -174,7 +233,7 @@ export async function listAdminPosts(): Promise<AdminPost[]> {
 }
 
 export async function getAdminPost(slug: string): Promise<AdminPost | null> {
-	const targetPath = fromSlug(slug);
+	const targetPath = (await resolveExistingPostPath(slug)) ?? buildPathFromSlug(slug);
 	try {
 		const raw = await fs.readFile(targetPath, "utf8");
 		return parseFrontmatter(targetPath, raw);
@@ -184,7 +243,10 @@ export async function getAdminPost(slug: string): Promise<AdminPost | null> {
 }
 
 export async function saveAdminPost(post: AdminPost): Promise<void> {
-	const targetPath = fromSlug(post.slug);
+	const targetPath = buildPathFromSlug(
+		post.slug,
+		inferPathStyle(post.sourcePath),
+	);
 	await ensureDir(path.dirname(targetPath));
 	await fs.writeFile(targetPath, serializePost(post), "utf8");
 }
@@ -195,27 +257,33 @@ export async function moveAdminPostSlug(
 ): Promise<void> {
 	if (!previousSlug || previousSlug === nextSlug) return;
 
-	const oldPath = fromSlug(previousSlug);
-	const nextPath = fromSlug(nextSlug);
+	const oldPath =
+		(await resolveExistingPostPath(previousSlug)) ??
+		buildPathFromSlug(previousSlug);
+	const nextPath = buildPathFromSlug(nextSlug, inferPathStyle(oldPath));
 
 	try {
 		await ensureDir(path.dirname(nextPath));
 		try {
 			await fs.access(nextPath);
 			await fs.rm(oldPath, { force: true });
+			await cleanupEmptyParentDirs(oldPath);
 			return;
 		} catch {
 			// fall through to rename when the next path does not exist yet
 		}
 		await fs.rename(oldPath, nextPath);
+		await cleanupEmptyParentDirs(oldPath);
 	} catch {
 		// no-op if old file does not exist yet
 	}
 }
 
 export async function deleteAdminPost(slug: string): Promise<void> {
-	const targetPath = fromSlug(slug);
+	const targetPath =
+		(await resolveExistingPostPath(slug)) ?? buildPathFromSlug(slug);
 	await fs.rm(targetPath, { force: true });
+	await cleanupEmptyParentDirs(targetPath);
 }
 
 export async function listPublicPosts(

@@ -7,7 +7,8 @@ export const GET: APIRoute = async ({ url, locals }) => {
 	}
 
 	const value = url.searchParams.get("value") || "";
-	const resolved = await resolveAdminPreviewUrl(value);
+	const sourcePath = url.searchParams.get("sourcePath") || "";
+	const resolved = await resolveAdminPreviewUrl(value, sourcePath);
 	return new Response(JSON.stringify(resolved), {
 		headers: {
 			"Content-Type": "application/json; charset=utf-8",
