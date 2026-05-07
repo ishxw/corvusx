@@ -60,7 +60,13 @@ const tagSuggestions = Array.from(
 								{statusInfo.label}
 							</span>
 						</div>
-						<h2 class="text-3xl font-black tracking-tight text-black/90 dark:text-white/95 leading-tight">{post.title}</h2>
+						<h2
+							data-post-title-display
+							data-empty-label="未命名文章"
+							class="text-3xl font-black tracking-tight text-black/90 dark:text-white/95 leading-tight"
+						>
+							{post.title}
+						</h2>
 						<p class="mt-2 text-sm text-black/40 dark:text-white/40 italic">{statusInfo.description}</p>
 					</div>
 				</div>
@@ -191,7 +197,7 @@ const tagSuggestions = Array.from(
 						{[
 							{ id: "image", label: "图", icon: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" },
 							{ id: "video", label: "影", icon: "M23 7l-7 5 7 5V7zM1 5h14v14H1V5z" },
-							{ id: "github", label: "Git", icon: "M9 19c-5 1.5-5-2.5-7m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" },
+							{ id: "github", label: "Git", icon: "M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" },
 						].map((tool) => (
 							<button type="button" data-snippet={tool.id} class="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm transition-all hover:text-[var(--primary)] dark:bg-black/40" title={tool.label}>
 								<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d={tool.icon}/></svg>
@@ -220,7 +226,7 @@ const tagSuggestions = Array.from(
 
 			<div class="grid lg:grid-cols-2">
 				<div class="flex flex-col border-r border-black/5 dark:border-white/5">
-					<textarea id="admin-markdown-editor" name="body" rows="30" class="w-full !border-none !bg-transparent !p-10 font-mono !text-sm leading-relaxed outline-none scrollbar-thin" placeholder="在此开始你的创作...">{post.body}</textarea>
+					<textarea id="admin-markdown-editor" name="body" rows="30" class="w-full resize-none overflow-hidden !border-none !bg-transparent !p-10 font-mono !text-sm leading-relaxed outline-none" placeholder="在此开始你的创作...">{post.body}</textarea>
 				</div>
 				<div class="flex flex-col bg-black/[0.005] dark:bg-white/[0.005]">
 					<div id="admin-markdown-preview" class="custom-md !max-w-none prose prose-sm !p-10 dark:prose-invert overflow-y-auto scrollbar-thin"></div>

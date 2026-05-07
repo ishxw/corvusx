@@ -49,7 +49,13 @@ const tagSuggestions = Array.from(
 								Drafting
 							</span>
 						</div>
-						<h2 class="text-3xl font-black tracking-tight text-black/90 dark:text-white/95 leading-tight">未命名文章</h2>
+						<h2
+							data-post-title-display
+							data-empty-label="未命名文章"
+							class="text-3xl font-black tracking-tight text-black/90 dark:text-white/95 leading-tight"
+						>
+							未命名文章
+						</h2>
 						<p class="mt-2 text-sm text-black/40 dark:text-white/40 italic">填入标题以开始，Slug 会根据标题自动生成。</p>
 					</div>
 				</div>
@@ -206,7 +212,7 @@ const tagSuggestions = Array.from(
 
 			<div class="grid lg:grid-cols-2">
 				<div class="flex flex-col border-r border-black/5 dark:border-white/5">
-					<textarea id="admin-markdown-editor" name="body" rows="30" class="w-full !border-none !bg-transparent !p-10 font-mono !text-sm leading-relaxed outline-none scrollbar-thin" placeholder="在此开始你的创作..."></textarea>
+					<textarea id="admin-markdown-editor" name="body" rows="30" class="w-full resize-none overflow-hidden !border-none !bg-transparent !p-10 font-mono !text-sm leading-relaxed outline-none" placeholder="在此开始你的创作..."></textarea>
 				</div>
 				<div class="flex flex-col bg-black/[0.005] dark:bg-white/[0.005]">
 					<div id="admin-markdown-preview" class="custom-md !max-w-none prose prose-sm !p-10 dark:prose-invert overflow-y-auto scrollbar-thin"></div>

@@ -79,6 +79,9 @@ function initAdminPostEditor(options: EnhancerOptions) {
 		: null;
 	const titleInput = form.querySelector<HTMLInputElement>('[name="title"]');
 	const slugInput = form.querySelector<HTMLInputElement>('[name="slug"]');
+	const titleDisplay = form.querySelector<HTMLElement>("[data-post-title-display]");
+	const editorPane = editor?.parentElement;
+	const previewPane = preview?.parentElement;
 
 	if (
 		!(editor instanceof HTMLTextAreaElement) ||
@@ -91,6 +94,55 @@ function initAdminPostEditor(options: EnhancerOptions) {
 	let previewTimer = 0;
 	let saveTimer = 0;
 	let isDirty = false;
+	const baseEditorHeight = editor.getBoundingClientRect().height;
+	const editorBottomSpacing = 8;
+
+	const getNaturalEditorHeight = () => {
+		const previousHeight = editor.style.height;
+		editor.style.height = "auto";
+		const nextEditorHeight = Math.max(
+			editor.scrollHeight + editorBottomSpacing,
+			baseEditorHeight,
+		);
+		editor.style.height = previousHeight;
+		return nextEditorHeight;
+	};
+
+	const resizeEditorToContent = () => {
+		const nextEditorHeight = getNaturalEditorHeight();
+		editor.style.height = `${nextEditorHeight}px`;
+		return nextEditorHeight;
+	};
+
+	const syncPaneHeights = (preserveViewport = false) => {
+		const scrollY = window.scrollY;
+		preview.style.minHeight = "0px";
+		if (editorPane instanceof HTMLElement) editorPane.style.minHeight = "0px";
+		if (previewPane instanceof HTMLElement) previewPane.style.minHeight = "0px";
+
+		const editorHeight = getNaturalEditorHeight();
+		const previewHeight = preview.scrollHeight;
+		// Add 1px to avoid visible off-by-one gaps caused by rounding.
+		const nextHeight = Math.max(editorHeight, previewHeight) + 1;
+
+		editor.style.height = `${nextHeight}px`;
+		preview.style.minHeight = `${nextHeight}px`;
+		if (editorPane instanceof HTMLElement) editorPane.style.minHeight = `${nextHeight}px`;
+		if (previewPane instanceof HTMLElement) previewPane.style.minHeight = `${nextHeight}px`;
+
+		if (preserveViewport) {
+			requestAnimationFrame(() => {
+				window.scrollTo({ top: scrollY });
+			});
+		}
+	};
+
+	const syncTitleDisplay = () => {
+		if (!(titleDisplay instanceof HTMLElement) || !titleInput) return;
+		const nextTitle =
+			titleInput.value.trim() || titleDisplay.dataset.emptyLabel || "未命名文章";
+		titleDisplay.textContent = nextTitle;
+	};
 
 	const updateDirtyState = (nextDirty: boolean) => {
 		isDirty = nextDirty;
@@ -217,6 +269,9 @@ function initAdminPostEditor(options: EnhancerOptions) {
 			showRestoreNotice("已恢复上次未提交的本地草稿。");
 			setStatus("本地草稿已恢复。", "success");
 			updateDirtyState(true);
+			syncTitleDisplay();
+			syncPaneHeights();
+			void render();
 		} catch {
 			localStorage.removeItem(options.autosaveKey);
 			hideRestoreNotice();
@@ -229,6 +284,7 @@ function initAdminPostEditor(options: EnhancerOptions) {
 			preview.innerHTML =
 				"<span class='text-black/30 dark:text-white/30 italic'>在此输入内容以生成实时预览...</span>";
 			stats.textContent = "0 字 / 0 分钟阅读";
+			syncPaneHeights(true);
 			return;
 		}
 
@@ -253,10 +309,12 @@ function initAdminPostEditor(options: EnhancerOptions) {
 
 			// Re-initialize GitHub cards and other dynamic components
 			window.initGitHubCards?.();
+			syncPaneHeights(true);
 		} catch {
 			preview.innerHTML =
 				"<span class='text-rose-500 font-bold'>预览生成失败，请检查网络连接。</span>";
 			stats.textContent = "";
+			syncPaneHeights(true);
 		}
 	};
 
@@ -268,7 +326,15 @@ function initAdminPostEditor(options: EnhancerOptions) {
 		}, 400);
 	};
 
-	editor.addEventListener("input", scheduleRender);
+	editor.addEventListener("input", () => {
+		const naturalEditorHeight = getNaturalEditorHeight();
+		const currentEditorHeight = editor.getBoundingClientRect().height;
+		if (naturalEditorHeight > currentEditorHeight) {
+			editor.style.height = `${naturalEditorHeight}px`;
+			syncPaneHeights();
+		}
+		scheduleRender();
+	});
 
 	form
 		.querySelectorAll("input[name], textarea[name], select[name]")
@@ -315,7 +381,11 @@ function initAdminPostEditor(options: EnhancerOptions) {
 		});
 	}
 
+	titleInput?.addEventListener("input", syncTitleDisplay);
+
 	void maybeRestore();
+	syncTitleDisplay();
+	resizeEditorToContent();
 	void render();
 	if (!localStorage.getItem(options.autosaveKey)) {
 		setStatus("已就绪。", "default");
