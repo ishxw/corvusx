@@ -24,7 +24,7 @@ import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 import corvusxNodeAdapter from "./src/server/astro-node-adapter.mjs";
 
-const site = process.env.SITE || "https://example.com/";
+const site = import.meta.env.SITE || "https://example.com/";
 
 // https://astro.build/config
 export default defineConfig({
